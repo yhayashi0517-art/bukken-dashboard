@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>不動産ダッシュボード</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>🏠 不動産物件ダッシュボード</h1>
+      <p id="updated-at" class="subtitle">データ読み込み中...</p>
+    </div>
+    <button id="reload-btn" class="btn btn-secondary">データ再読み込み</button>
+  </header>
+
+  <section class="stats" id="stats">
+    <div class="stat-card">
+      <span class="stat-label">全物件</span>
+      <span class="stat-value" id="stat-total">-</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">売り出し中</span>
+      <span class="stat-value" id="stat-active">-</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">成約済み</span>
+      <span class="stat-value" id="stat-sold">-</span>
+    </div>
+    <div class="stat-card highlight">
+      <span class="stat-label">割安物件</span>
+      <span class="stat-value" id="stat-bargain">-</span>
+    </div>
+  </section>
+
+  <section class="filters">
+    <div class="filter-station-group">
+      <span class="filter-station-label">駅で絞り込み（最大5駅・入力して選択）</span>
+      <div id="filter-station" class="station-picker"></div>
+    </div>
+    <label>
+      表示対象
+      <select id="filter-status">
+        <option value="active">売り出し中のみ</option>
+        <option value="sold">成約物件のみ</option>
+        <option value="bargain">割安物件のみ</option>
+        <option value="all">すべて</option>
+      </select>
+    </label>
+    <label class="filter-layout-group">
+      間取りで絞り込み（複数選択可）
+      <div id="filter-layout" class="chip-filter"></div>
+    </label>
+    <div class="filter-range-group">
+      <div id="filter-area" class="range-filter" data-range-id="area"></div>
+      <div id="filter-age" class="range-filter" data-range-id="age"></div>
+      <div id="filter-walk" class="range-filter" data-range-id="walk"></div>
+      <div id="filter-bargain" class="range-filter" data-range-id="bargain"></div>
+    </div>
+    <input type="search" id="search-input" placeholder="物件名・住所で検索...">
+  </section>
+
+  <section class="market-summary" id="market-summary"></section>
+
+  <p id="result-count" class="result-count">表示中: - 件</p>
+
+  <main>
+    <div class="property-table-wrapper">
+      <div class="property-table">
+        <div id="property-list-header" class="property-list-header"></div>
+        <div id="property-list" class="property-list"></div>
+      </div>
+    </div>
+    <p id="empty-message" class="empty-message" hidden>条件に一致する物件がありません。</p>
+  </main>
+
+  <script src="app.js?v=20"></script>
+</body>
+</html>
