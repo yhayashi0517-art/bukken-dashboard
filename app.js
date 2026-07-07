@@ -2,8 +2,16 @@
  * 不動産ダッシュボード - フロントエンド
  */
 
-const DATA_URL = "data/properties.json";
-const STATIONS_URL = "data/stations.json";
+/** GitHub Pages 等でも正しいパスになるよう JSON の URL を解決する */
+function resolveAssetUrl(relativePath) {
+  const pagePath = window.location.pathname.replace(/\/index\.html$/, "");
+  const basePath = pagePath.endsWith("/") ? pagePath : `${pagePath}/`;
+  return `${basePath}${relativePath.replace(/^\//, "")}`;
+}
+
+const DATA_URL = resolveAssetUrl("data/properties.json");
+const DATA_INDEX_URL = resolveAssetUrl("data/properties-index.json");
+const STATIONS_URL = resolveAssetUrl("data/stations.json");
 
 let allProperties = [];
 let marketSummary = {};
@@ -1179,19 +1187,45 @@ function setStationOptions(stations) {
   renderStationPicker();
 }
 
+/** 物件データ JSON を読み込む（分割ファイル対応） */
+async function loadPropertyPayload() {
+  const cacheBust = `t=${Date.now()}`;
+  const indexResponse = await fetch(`${DATA_INDEX_URL}?${cacheBust}`);
+  if (indexResponse.ok) {
+    const indexData = await indexResponse.json();
+    const chunkFiles = Array.isArray(indexData.chunks) ? indexData.chunks : [];
+    const chunkResults = await Promise.all(
+      chunkFiles.map(async (chunkName) => {
+        const chunkUrl = resolveAssetUrl(`data/${chunkName}`);
+        const chunkResponse = await fetch(`${chunkUrl}?${cacheBust}`);
+        if (!chunkResponse.ok) {
+          throw new Error(`分割データの読み込みに失敗しました (${chunkResponse.status}: ${chunkName})`);
+        }
+        return chunkResponse.json();
+      })
+    );
+    return {
+      ...indexData,
+      properties: chunkResults.flatMap((chunk) => chunk.properties || []),
+    };
+  }
+
+  const response = await fetch(`${DATA_URL}?${cacheBust}`);
+  if (!response.ok) {
+    throw new Error(`JSON の読み込みに失敗しました (${response.status})`);
+  }
+  return response.json();
+}
+
 /** JSON データを読み込んで画面を更新する */
 async function loadData() {
   elements.updatedAt.textContent = "データ読み込み中...";
 
-  const [response, catalogStations] = await Promise.all([
-    fetch(`${DATA_URL}?t=${Date.now()}`),
+  const [data, catalogStations] = await Promise.all([
+    loadPropertyPayload(),
     loadStationCatalog(),
   ]);
-  if (!response.ok) {
-    throw new Error(`JSON の読み込みに失敗しました (${response.status})`);
-  }
 
-  const data = await response.json();
   allProperties = data.properties || [];
   marketSummary = data.market_summary || {};
 
