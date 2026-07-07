@@ -127,7 +127,67 @@ function normalizeLayoutKey(layout) {
 /** 間取りの表示ラベルを整形する */
 function formatLayoutLabel(layout) {
   const key = normalizeLayoutKey(layout);
+  if (key === "1R") return "1R";
   return key || String(layout || "-");
+}
+
+/** 間取りキーの並び順を数値化する（部屋数 → タイプ） */
+function parseLayoutSortKey(key) {
+  if (key === "1R") return [0, 0, 0, key];
+  const match = String(key).match(/^(\d+)(.*)$/);
+  if (!match) return [99, 99, 0, key];
+
+  const rooms = Number(match[1]);
+  const rest = match[2] || "";
+  const hasService = rest.includes("S") || rest.includes("Ｓ") ? 1 : 0;
+
+  let typeRank = 5;
+  if (rest.includes("LDK")) typeRank = 3;
+  else if (rest.includes("DK")) typeRank = 2;
+  else if (rest.includes("LK")) typeRank = 2.5;
+  else if (rest.includes("K")) typeRank = 1;
+  else if (rest.includes("R")) typeRank = 0;
+
+  return [rooms, typeRank, hasService, key];
+}
+
+/** 間取りキーを表示順に比較する */
+function compareLayoutKeys(left, right) {
+  const leftOrder = parseLayoutSortKey(left);
+  const rightOrder = parseLayoutSortKey(right);
+  for (let index = 0; index < 3; index += 1) {
+    if (leftOrder[index] !== rightOrder[index]) {
+      return leftOrder[index] - rightOrder[index];
+    }
+  }
+  return String(leftOrder[3]).localeCompare(String(rightOrder[3]), "ja");
+}
+
+/** 間取りを部屋数グループに分類する */
+function groupLayoutsByRooms(layouts) {
+  const groupDefinitions = [
+    { id: "1", label: "1部屋", match: (key) => key === "1R" || key.startsWith("1") },
+    { id: "2", label: "2部屋", match: (key) => key.startsWith("2") },
+    { id: "3", label: "3部屋", match: (key) => key.startsWith("3") },
+    { id: "4plus", label: "4部屋以上", match: (key) => /^[4-9]/.test(key) },
+  ];
+
+  const groups = groupDefinitions.map((definition) => ({
+    ...definition,
+    items: [],
+  }));
+  const otherGroup = { id: "other", label: "その他", items: [] };
+
+  layouts.forEach((layout) => {
+    const matchedGroup = groups.find((group) => group.match(layout.key));
+    if (matchedGroup) {
+      matchedGroup.items.push(layout);
+      return;
+    }
+    otherGroup.items.push(layout);
+  });
+
+  return [...groups, otherGroup].filter((group) => group.items.length > 0);
 }
 
 /** 数値を小数点第一位まで表示する */
@@ -571,37 +631,51 @@ function refreshPropertyList() {
   renderProperties();
 }
 
-/** チップ型フィルターを描画する */
-function renderChipFilter(container, options, selectedKeys, emptyLabel = "選択なし") {
-  const selectedCount = selectedKeys.size;
+/** 間取りフィルターを描画する */
+function renderLayoutFilter() {
+  const layouts = getAvailableLayouts();
+  const groups = groupLayoutsByRooms(layouts);
+  const selectedCount = selectedLayoutKeys.size;
 
-  const chips = options
-    .map((option) => {
-      const isSelected = selectedKeys.has(option.key);
-      const count = option.count != null ? `<span class="layout-count">${option.count}</span>` : "";
+  const groupMarkup = groups
+    .map((group) => {
+      const options = group.items
+        .map((layout) => {
+          const isSelected = selectedLayoutKeys.has(layout.key);
+          return `
+            <label class="layout-option${isSelected ? " selected" : ""}">
+              <input
+                type="checkbox"
+                value="${layout.key}"
+                ${isSelected ? "checked" : ""}
+              >
+              <span>${layout.label}</span>
+            </label>
+          `;
+        })
+        .join("");
+
       return `
-        <label class="filter-chip${isSelected ? " selected" : ""}">
-          <input
-            type="checkbox"
-            value="${option.key}"
-            ${isSelected ? "checked" : ""}
-          >
-          <span>${option.label}</span>
-          ${count}
-        </label>
+        <section class="layout-section" aria-label="${group.label}">
+          <h3 class="layout-section-label">${group.label}</h3>
+          <div class="layout-grid">${options}</div>
+        </section>
       `;
     })
     .join("");
 
-  container.innerHTML = `
-    <div class="chip-filter-actions">
-      <button type="button" class="layout-action-btn" data-chip-action="all">すべて選択</button>
-      <button type="button" class="layout-action-btn" data-chip-action="clear">クリア</button>
-      <span class="layout-selected-count">${
-        selectedCount > 0 ? `${selectedCount} 件選択中` : emptyLabel
-      }</span>
+  elements.filterLayout.innerHTML = `
+    <div class="layout-filter-toolbar">
+      <button type="button" class="layout-toolbar-btn" data-chip-action="all">すべて</button>
+      <span class="layout-toolbar-divider" aria-hidden="true"></span>
+      <button type="button" class="layout-toolbar-btn" data-chip-action="clear">クリア</button>
+      ${
+        selectedCount > 0
+          ? `<span class="layout-toolbar-status">${selectedCount}件選択中</span>`
+          : ""
+      }
     </div>
-    <div class="chip-group">${chips}</div>
+    <div class="layout-sections">${groupMarkup}</div>
   `;
 }
 
@@ -617,21 +691,13 @@ function getAvailableLayouts() {
       layoutMap.set(key, {
         key,
         label: formatLayoutLabel(property.layout),
-        count: 0,
       });
     }
-    layoutMap.get(key).count += 1;
   });
 
   return [...layoutMap.values()].sort((left, right) =>
-    left.label.localeCompare(right.label, "ja")
+    compareLayoutKeys(left.key, right.key)
   );
-}
-
-/** 間取りフィルターを描画する */
-function renderLayoutFilter() {
-  const layouts = getAvailableLayouts();
-  renderChipFilter(elements.filterLayout, layouts, selectedLayoutKeys);
 }
 
 /** レンジスライダーの塗りつぶし幅を更新する */
