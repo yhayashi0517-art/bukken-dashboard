@@ -666,9 +666,8 @@ function renderLayoutFilter() {
 
   elements.filterLayout.innerHTML = `
     <div class="layout-filter-toolbar">
-      <button type="button" class="layout-toolbar-btn" data-chip-action="all">すべて</button>
-      <span class="layout-toolbar-divider" aria-hidden="true"></span>
-      <button type="button" class="layout-toolbar-btn" data-chip-action="clear">クリア</button>
+      <button type="button" class="page-btn" data-chip-action="all">すべて</button>
+      <button type="button" class="page-btn" data-chip-action="clear">クリア</button>
       ${
         selectedCount > 0
           ? `<span class="layout-toolbar-status">${selectedCount}件選択中</span>`

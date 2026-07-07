@@ -394,29 +394,14 @@ body {
 .layout-filter-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
-.layout-toolbar-btn {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.layout-toolbar-btn:hover {
-  text-decoration: underline;
-}
-
-.layout-toolbar-divider {
-  width: 1px;
-  height: 0.75rem;
-  background: var(--border);
+.layout-filter-toolbar .page-btn {
+  min-width: auto;
+  padding: 0 0.75rem;
+  font-size: 0.82rem;
 }
 
 .layout-toolbar-status {
