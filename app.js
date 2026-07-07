@@ -14,6 +14,8 @@ const PAGE_SIZE = 100;
 
 let allProperties = [];
 let marketSummary = {};
+/** 売り出し中物件から構築する「物件名 → 所在地（町名）」の索引 */
+let buildingLocalityIndex = new Map();
 let currentPage = 1;
 const selectedLayoutKeys = new Set();
 /** 選択中の駅（最大5件・選択順を保持） */
@@ -478,6 +480,102 @@ function getFloorSortValue(property) {
   return match ? Number(match[1]) : Number.NaN;
 }
 
+/** 所在地文字列から町名トークンを抽出する */
+function extractAddressLocalities(address) {
+  if (!address) return new Set();
+
+  const text = String(address).trim();
+  if (!text) return new Set();
+
+  const localities = new Set();
+  const hasAdminMarker = /[都道府県市区]/.test(text);
+
+  if (!hasAdminMarker) {
+    const token = text.replace(/[0-9０-９\-－番地号].*$/, "").trim();
+    if (token) localities.add(token);
+    return localities;
+  }
+
+  const wardIndex = text.lastIndexOf("区");
+  if (wardIndex >= 0) {
+    const afterWard = text.slice(wardIndex + 1);
+    const match = afterWard.match(/^([\u4e00-\u9fff]{2,10})/);
+    if (match) {
+      const token = match[1].replace(/[0-9０-９\-－番地号].*$/, "").trim();
+      if (token) localities.add(token);
+    }
+  }
+
+  return localities;
+}
+
+/** 売り出し中物件から物件名ごとの所在地索引を構築する */
+function buildBuildingLocalityIndex(properties) {
+  const index = new Map();
+
+  properties.forEach((property) => {
+    if (!property.is_active || !property.property_name) return;
+
+    const localities = extractAddressLocalities(property.address);
+    if (localities.size === 0) return;
+
+    if (!index.has(property.property_name)) {
+      index.set(property.property_name, new Set());
+    }
+    const bucket = index.get(property.property_name);
+    localities.forEach((locality) => bucket.add(locality));
+  });
+
+  return index;
+}
+
+/** 所在地が物件名の既知所在地と整合するか判定する */
+function matchesKnownBuildingLocality(property) {
+  const propertyName = property.property_name;
+  if (!propertyName || !buildingLocalityIndex.has(propertyName)) {
+    return true;
+  }
+
+  const allowedLocalities = buildingLocalityIndex.get(propertyName);
+  const propertyLocalities = extractAddressLocalities(property.address);
+  if (propertyLocalities.size === 0 || allowedLocalities.size === 0) {
+    return true;
+  }
+
+  for (const locality of propertyLocalities) {
+    if (allowedLocalities.has(locality)) return true;
+  }
+  return false;
+}
+
+/** キーワード検索に合うか判定する */
+function matchesKeywordSearch(property, keyword) {
+  if (!keyword) return true;
+
+  const haystack = [
+    property.property_name,
+    property.source_name,
+    property.address,
+    property.access,
+    property.memo,
+    property.station,
+    property.layout,
+    property.direction,
+    getDisplayState(property),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (!haystack.includes(keyword)) return false;
+
+  const nameMatches = (property.property_name || "").toLowerCase().includes(keyword);
+  if (property.is_sold && property.property_name_inferred && nameMatches) {
+    return matchesKnownBuildingLocality(property);
+  }
+
+  return true;
+}
+
 /** フィルター条件に合う物件を返す */
 function getFilteredProperties() {
   const stations = getSelectedStations();
@@ -491,22 +589,7 @@ function getFilteredProperties() {
     if (!matchesAreaFilter(property)) return false;
     if (!matchesWalkFilter(property)) return false;
     if (!matchesAgeFilter(property)) return false;
-
-    if (keyword) {
-      const haystack = [
-        property.property_name,
-        property.address,
-        property.access,
-        property.memo,
-        property.station,
-        property.layout,
-        property.direction,
-        getDisplayState(property),
-      ]
-        .join(" ")
-        .toLowerCase();
-      if (!haystack.includes(keyword)) return false;
-    }
+    if (!matchesKeywordSearch(property, keyword)) return false;
 
     return true;
   });
@@ -1404,6 +1487,7 @@ async function loadData() {
 
   allProperties = data.properties || [];
   marketSummary = data.market_summary || {};
+  buildingLocalityIndex = buildBuildingLocalityIndex(allProperties);
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
 
