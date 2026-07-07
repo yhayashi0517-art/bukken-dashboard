@@ -2,11 +2,9 @@
  * 不動産ダッシュボード - フロントエンド
  */
 
-/** GitHub Pages 等でも正しいパスになるよう JSON の URL を解決する */
+/** GitHub Pages 等のサブパスでも正しい JSON URL を返す */
 function resolveAssetUrl(relativePath) {
-  const pagePath = window.location.pathname.replace(/\/index\.html$/, "");
-  const basePath = pagePath.endsWith("/") ? pagePath : `${pagePath}/`;
-  return `${basePath}${relativePath.replace(/^\//, "")}`;
+  return new URL(relativePath.replace(/^\//, ""), document.baseURI).href;
 }
 
 const DATA_URL = resolveAssetUrl("data/properties.json");
@@ -1212,7 +1210,11 @@ async function loadPropertyPayload() {
 
   const response = await fetch(`${DATA_URL}?${cacheBust}`);
   if (!response.ok) {
-    throw new Error(`JSON の読み込みに失敗しました (${response.status})`);
+    throw new Error(
+      `JSON の読み込みに失敗しました (${response.status})\n`
+      + `試行URL: ${DATA_INDEX_URL}\n`
+      + `フォールバック: ${DATA_URL}`
+    );
   }
   return response.json();
 }
