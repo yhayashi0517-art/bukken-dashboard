@@ -10,9 +10,11 @@ function resolveAssetUrl(relativePath) {
 const DATA_URL = resolveAssetUrl("data/properties.json");
 const DATA_INDEX_URL = resolveAssetUrl("data/properties-index.json");
 const STATIONS_URL = resolveAssetUrl("data/stations.json");
+const PAGE_SIZE = 100;
 
 let allProperties = [];
 let marketSummary = {};
+let currentPage = 1;
 const selectedLayoutKeys = new Set();
 /** 選択中の駅（最大5件・選択順を保持） */
 const selectedStations = [];
@@ -104,6 +106,8 @@ const elements = {
   propertyList: document.getElementById("property-list"),
   emptyMessage: document.getElementById("empty-message"),
   reloadBtn: document.getElementById("reload-btn"),
+  paginationTop: document.getElementById("pagination-top"),
+  paginationBottom: document.getElementById("pagination-bottom"),
 };
 
 /** 全角英数字を半角に変換する */
@@ -566,6 +570,12 @@ function renderTableHeader() {
   });
 }
 
+/** フィルター変更後に一覧を先頭ページから再描画する */
+function refreshPropertyList() {
+  resetPage();
+  renderProperties();
+}
+
 /** チップ型フィルターを描画する */
 function renderChipFilter(container, options, selectedKeys, emptyLabel = "選択なし") {
   const selectedCount = selectedKeys.size;
@@ -702,7 +712,7 @@ function setupRangeFilter(container) {
       updateRangeFilterDisplay(container);
       updateBargainStat();
       renderMarketSummary();
-      renderProperties();
+      refreshPropertyList();
     });
 
     updateRangeFilterDisplay(container);
@@ -745,7 +755,7 @@ function setupRangeFilter(container) {
 
     rangeFilterState[rangeId] = { min: minValue, max: maxValue };
     updateRangeFilterDisplay(container);
-    renderProperties();
+    refreshPropertyList();
   };
 
   minInput.addEventListener("input", syncFromInputs);
@@ -787,7 +797,7 @@ function setupChipFilterDelegation(container, optionsOrGetter, selectedKeys) {
     }
 
     renderAllChipFilters();
-    renderProperties();
+    refreshPropertyList();
   });
 
   container.addEventListener("change", (event) => {
@@ -801,7 +811,7 @@ function setupChipFilterDelegation(container, optionsOrGetter, selectedKeys) {
     }
 
     renderAllChipFilters();
-    renderProperties();
+    refreshPropertyList();
   });
 }
 
@@ -903,11 +913,117 @@ function renderFloorPlanCell(property) {
   `;
 }
 
+/** フィルター変更時にページを先頭に戻す */
+function resetPage() {
+  currentPage = 1;
+}
+
+/** ページ番号一覧を生成する（省略表示付き） */
+function buildPageNumbers(totalPages, page) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages = new Set([1, totalPages, page, page - 1, page + 1]);
+  const sorted = [...pages].filter((value) => value >= 1 && value <= totalPages).sort((a, b) => a - b);
+  const result = [];
+
+  sorted.forEach((value, index) => {
+    if (index > 0 && value - sorted[index - 1] > 1) {
+      result.push("...");
+    }
+    result.push(value);
+  });
+
+  return result;
+}
+
+/** ページネーション UI を描画する */
+function renderPagination(totalPages) {
+  const containers = [elements.paginationTop, elements.paginationBottom].filter(Boolean);
+  if (containers.length === 0) return;
+
+  containers.forEach((container) => {
+    container.innerHTML = "";
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "page-btn";
+    prevBtn.textContent = "‹";
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.setAttribute("aria-label", "前のページ");
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        renderProperties();
+        document.querySelector(".table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+    container.appendChild(prevBtn);
+
+    buildPageNumbers(totalPages, currentPage).forEach((item) => {
+      if (item === "...") {
+        const ellipsis = document.createElement("span");
+        ellipsis.className = "page-ellipsis";
+        ellipsis.textContent = "…";
+        container.appendChild(ellipsis);
+        return;
+      }
+
+      const pageBtn = document.createElement("button");
+      pageBtn.type = "button";
+      pageBtn.className = `page-btn${item === currentPage ? " page-btn--active" : ""}`;
+      pageBtn.textContent = String(item);
+      pageBtn.setAttribute("aria-label", `${item} ページ目`);
+      pageBtn.setAttribute("aria-current", item === currentPage ? "page" : "false");
+      pageBtn.addEventListener("click", () => {
+        currentPage = item;
+        renderProperties();
+        document.querySelector(".table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      container.appendChild(pageBtn);
+    });
+
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "page-btn";
+    nextBtn.textContent = "›";
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.setAttribute("aria-label", "次のページ");
+    nextBtn.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        renderProperties();
+        document.querySelector(".table-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+    container.appendChild(nextBtn);
+  });
+}
+
 /** 物件行を描画する */
 function renderProperties() {
   const filtered = sortProperties(getFilteredProperties());
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
-  elements.resultCount.textContent = `表示中: ${filtered.length.toLocaleString()} 件`;
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
+
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+
+  if (filtered.length === 0) {
+    elements.resultCount.textContent = "表示中: 0 件";
+  } else {
+    const rangeStart = startIndex + 1;
+    const rangeEnd = startIndex + pageItems.length;
+    elements.resultCount.textContent =
+      `${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} 件 / 全 ${filtered.length.toLocaleString()} 件（${currentPage} / ${totalPages} ページ）`;
+  }
+
+  renderPagination(totalPages);
   elements.propertyList.innerHTML = "";
 
   if (filtered.length === 0) {
@@ -917,7 +1033,7 @@ function renderProperties() {
 
   elements.emptyMessage.hidden = true;
 
-  filtered.forEach((property) => {
+  pageItems.forEach((property) => {
     const displayState = getDisplayState(property);
     const isSold = isSoldProperty(property);
     const isBargain = isBargainProperty(property);
@@ -989,7 +1105,7 @@ function selectStationFromSuggestion(station) {
 function onStationFilterChange() {
   renderStationPicker();
   renderMarketSummary();
-  renderProperties();
+  refreshPropertyList();
 }
 
 /** 駅候補リストを描画する */
@@ -1253,6 +1369,7 @@ async function loadData() {
   renderAllChipFilters();
   renderTableHeader();
   renderMarketSummary();
+  resetPage();
   renderProperties();
 }
 
@@ -1266,8 +1383,8 @@ function setupEventListeners() {
   setupStationPicker();
   setupRangeFilters();
 
-  elements.filterStatus.addEventListener("change", renderProperties);
-  elements.searchInput.addEventListener("input", renderProperties);
+  elements.filterStatus.addEventListener("change", refreshPropertyList);
+  elements.searchInput.addEventListener("input", refreshPropertyList);
 
   elements.reloadBtn.addEventListener("click", async () => {
     try {
