@@ -88,10 +88,6 @@ const TABLE_COLUMNS = [
 
 const elements = {
   updatedAt: document.getElementById("updated-at"),
-  statTotal: document.getElementById("stat-total"),
-  statActive: document.getElementById("stat-active"),
-  statSold: document.getElementById("stat-sold"),
-  statBargain: document.getElementById("stat-bargain"),
   filterStation: document.getElementById("filter-station"),
   filterStatus: document.getElementById("filter-status"),
   filterLayout: document.getElementById("filter-layout"),
@@ -106,7 +102,6 @@ const elements = {
   propertyList: document.getElementById("property-list"),
   emptyMessage: document.getElementById("empty-message"),
   reloadBtn: document.getElementById("reload-btn"),
-  paginationTop: document.getElementById("pagination-top"),
   paginationBottom: document.getElementById("pagination-bottom"),
 };
 
@@ -940,12 +935,11 @@ function buildPageNumbers(totalPages, page) {
 
 /** ページネーション UI を描画する */
 function renderPagination(totalPages) {
-  const containers = [elements.paginationTop, elements.paginationBottom].filter(Boolean);
-  if (containers.length === 0) return;
+  const container = elements.paginationBottom;
+  if (!container) return;
 
-  containers.forEach((container) => {
-    container.innerHTML = "";
-    if (totalPages <= 1) return;
+  container.innerHTML = "";
+  if (totalPages <= 1) return;
 
     const prevBtn = document.createElement("button");
     prevBtn.type = "button";
@@ -999,7 +993,6 @@ function renderPagination(totalPages) {
       }
     });
     container.appendChild(nextBtn);
-  });
 }
 
 /** 物件行を描画する */
@@ -1348,12 +1341,6 @@ async function loadData() {
   marketSummary = data.market_summary || {};
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
-  elements.statTotal.textContent = data.total_count ?? 0;
-  elements.statActive.textContent = data.active_count ?? 0;
-  if (elements.statSold) {
-    elements.statSold.textContent = data.sold_count ?? 0;
-  }
-  elements.statBargain.textContent = data.bargain_count ?? 0;
 
   const defaultThreshold = Number(marketSummary.bargain_threshold_pct ?? 10);
   if (!Number.isNaN(defaultThreshold)) {

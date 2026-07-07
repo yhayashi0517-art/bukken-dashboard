@@ -5,35 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>不動産ダッシュボード</title>
   <base href="./">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="header">
     <div class="header-brand">
-      <div class="header-logo" aria-hidden="true">◈</div>
-      <div>
-        <h1>不動産物件ダッシュボード</h1>
-        <p id="updated-at" class="subtitle">データ読み込み中...</p>
-      </div>
+      <h1>物件一覧</h1>
+      <p id="updated-at" class="subtitle">データ読み込み中...</p>
     </div>
-    <button id="reload-btn" class="btn btn-ghost" type="button">データ再読み込み</button>
+    <button id="reload-btn" class="btn btn-secondary" type="button">再読み込み</button>
   </header>
 
   <div class="dashboard-layout">
     <aside class="sidebar" aria-label="検索・フィルター">
       <div class="sidebar-inner">
-        <h2 class="sidebar-title">検索・フィルター</h2>
-
         <div class="sidebar-block">
-          <label class="field-label" for="search-input">キーワード検索</label>
-          <input type="search" id="search-input" class="field-input" placeholder="物件名・住所で検索...">
+          <label class="field-label" for="search-input">検索</label>
+          <input type="search" id="search-input" class="field-input" placeholder="物件名・住所">
         </div>
 
         <div class="sidebar-block filter-station-group">
-          <span class="field-label">駅で絞り込み（最大5駅）</span>
+          <span class="field-label">駅（最大5件）</span>
           <div id="filter-station" class="station-picker"></div>
         </div>
 
@@ -48,7 +40,7 @@
         </div>
 
         <div class="sidebar-block filter-layout-group">
-          <span class="field-label">間取り（複数選択可）</span>
+          <span class="field-label">間取り</span>
           <div id="filter-layout" class="chip-filter"></div>
         </div>
 
@@ -62,31 +54,9 @@
     </aside>
 
     <div class="main-panel">
-      <section class="stats" id="stats">
-        <div class="stat-card">
-          <span class="stat-label">全物件</span>
-          <span class="stat-value" id="stat-total">-</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">売り出し中</span>
-          <span class="stat-value stat-value--cyan" id="stat-active">-</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">成約済み</span>
-          <span class="stat-value" id="stat-sold">-</span>
-        </div>
-        <div class="stat-card stat-card--accent">
-          <span class="stat-label">割安物件</span>
-          <span class="stat-value stat-value--green" id="stat-bargain">-</span>
-        </div>
-      </section>
-
       <section class="market-summary" id="market-summary"></section>
 
-      <div class="content-toolbar">
-        <p id="result-count" class="result-count">表示中: - 件</p>
-        <nav id="pagination-top" class="pagination" aria-label="ページ送り（上部）"></nav>
-      </div>
+      <p id="result-count" class="result-count">表示中: - 件</p>
 
       <main class="table-panel">
         <div class="property-table-wrapper">
@@ -96,11 +66,11 @@
           </div>
         </div>
         <p id="empty-message" class="empty-message" hidden>条件に一致する物件がありません。</p>
-        <nav id="pagination-bottom" class="pagination pagination--bottom" aria-label="ページ送り（下部）"></nav>
+        <nav id="pagination-bottom" class="pagination" aria-label="ページ送り"></nav>
       </main>
     </div>
   </div>
 
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>
