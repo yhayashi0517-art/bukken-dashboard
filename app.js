@@ -16,6 +16,10 @@ let allProperties = [];
 let marketSummary = {};
 let currentPage = 1;
 const selectedLayoutKeys = new Set();
+/** 選択中の方角（未選択時はすべて対象） */
+const selectedDirectionKeys = new Set();
+/** 2階以上のみ表示するか */
+let filterFloorMin2 = false;
 /** 選択中の駅（最大5件・選択順を保持） */
 const selectedStations = [];
 const MAX_SELECTED_STATIONS = 5;
@@ -23,6 +27,34 @@ const MAX_STATION_SUGGESTIONS = 120;
 let allStations = [];
 let stationPickerActiveIndex = -1;
 let sortState = { column: "price_jpy", direction: "asc" };
+
+/** 方角フィルターの選択肢（正規化キー → 表示ラベル） */
+const DIRECTION_OPTIONS = [
+  { key: "南", label: "南" },
+  { key: "南東", label: "南東" },
+  { key: "南西", label: "南西" },
+  { key: "東", label: "東" },
+  { key: "西", label: "西" },
+  { key: "北東", label: "北東" },
+  { key: "北西", label: "北西" },
+  { key: "北", label: "北" },
+];
+
+/** 方角の別名を正規化するマップ */
+const DIRECTION_ALIASES = {
+  南: "南",
+  北: "北",
+  東: "東",
+  西: "西",
+  南東: "南東",
+  南西: "南西",
+  北東: "北東",
+  北西: "北西",
+  東南: "南東",
+  西南: "南西",
+  東北: "北東",
+  西北: "北西",
+};
 
 /** レンジスライダー設定（上限値は添付画像に準拠） */
 const RANGE_FILTER_CONFIG = {
@@ -91,6 +123,8 @@ const elements = {
   filterStation: document.getElementById("filter-station"),
   filterStatus: document.getElementById("filter-status"),
   filterLayout: document.getElementById("filter-layout"),
+  filterFloorMin2: document.getElementById("filter-floor-min2"),
+  filterDirection: document.getElementById("filter-direction"),
   filterArea: document.getElementById("filter-area"),
   filterAge: document.getElementById("filter-age"),
   filterWalk: document.getElementById("filter-walk"),
@@ -389,6 +423,34 @@ function matchesLayoutFilter(property) {
   return selectedLayoutKeys.has(normalizeLayoutKey(property.layout));
 }
 
+/** 方角表記を正規化キーに変換する */
+function normalizeDirectionKey(direction) {
+  if (!direction || direction === "-") return "";
+  const text = toHalfWidth(String(direction)).replace(/\s/g, "");
+  return DIRECTION_ALIASES[text] || "";
+}
+
+/** 物件の正規化済み方角を返す */
+function getNormalizedDirection(property) {
+  return normalizeDirectionKey(getDisplayDirection(property));
+}
+
+/** 階数フィルター（2階以上）に合うか判定する */
+function matchesFloorFilter(property) {
+  if (!filterFloorMin2) return true;
+  const floorValue = getFloorSortValue(property);
+  if (Number.isNaN(floorValue)) return false;
+  return floorValue >= 2;
+}
+
+/** 方角フィルターに合うか判定する */
+function matchesDirectionFilter(property) {
+  if (selectedDirectionKeys.size === 0) return true;
+  const key = getNormalizedDirection(property);
+  if (!key) return false;
+  return selectedDirectionKeys.has(key);
+}
+
 /** 表示対象フィルターに合うか判定する */
 function matchesStatusFilter(property, statusFilter) {
   switch (statusFilter) {
@@ -598,6 +660,8 @@ function getFilteredProperties() {
     if (!matchesStations(property, stations)) return false;
     if (!matchesStatusFilter(property, statusFilter)) return false;
     if (!matchesLayoutFilter(property)) return false;
+    if (!matchesFloorFilter(property)) return false;
+    if (!matchesDirectionFilter(property)) return false;
     if (!matchesAreaFilter(property)) return false;
     if (!matchesWalkFilter(property)) return false;
     if (!matchesAgeFilter(property)) return false;
@@ -749,6 +813,11 @@ function clearAllFilters() {
   elements.filterStatus.value = "active";
   selectedStations.splice(0, selectedStations.length);
   selectedLayoutKeys.clear();
+  selectedDirectionKeys.clear();
+  filterFloorMin2 = false;
+  if (elements.filterFloorMin2) {
+    elements.filterFloorMin2.checked = false;
+  }
   stationPickerActiveIndex = -1;
 
   const defaults = getDefaultRangeFilterState();
@@ -778,6 +847,9 @@ function renderLayoutFilter() {
 
   const groupMarkup = groups
     .map((group) => {
+      const allSelected =
+        group.items.length > 0 &&
+        group.items.every((layout) => selectedLayoutKeys.has(layout.key));
       const options = group.items
         .map((layout) => {
           const isSelected = selectedLayoutKeys.has(layout.key);
@@ -796,7 +868,14 @@ function renderLayoutFilter() {
 
       return `
         <section class="layout-section" aria-label="${group.label}">
-          <h3 class="layout-section-label">${group.label}</h3>
+          <div class="layout-section-header">
+            <h3 class="layout-section-label">${group.label}</h3>
+            <button
+              type="button"
+              class="page-btn layout-group-btn${allSelected ? " is-active" : ""}"
+              data-layout-group="${group.id}"
+            >${allSelected ? "解除" : "一括選択"}</button>
+          </div>
           <div class="layout-grid">${options}</div>
         </section>
       `;
@@ -814,6 +893,39 @@ function renderLayoutFilter() {
       }
     </div>
     <div class="layout-sections">${groupMarkup}</div>
+  `;
+}
+
+/** 方角フィルターを描画する */
+function renderDirectionFilter() {
+  if (!elements.filterDirection) return;
+
+  const selectedCount = selectedDirectionKeys.size;
+  const options = DIRECTION_OPTIONS.map((option) => {
+    const isSelected = selectedDirectionKeys.has(option.key);
+    return `
+      <label class="direction-option${isSelected ? " selected" : ""}">
+        <input
+          type="checkbox"
+          value="${option.key}"
+          ${isSelected ? "checked" : ""}
+        >
+        <span>${option.label}</span>
+      </label>
+    `;
+  }).join("");
+
+  elements.filterDirection.innerHTML = `
+    <div class="layout-filter-toolbar">
+      <button type="button" class="page-btn" data-chip-action="all">すべて</button>
+      <button type="button" class="page-btn" data-chip-action="clear">クリア</button>
+      ${
+        selectedCount > 0
+          ? `<span class="layout-toolbar-status">${selectedCount}件選択中</span>`
+          : ""
+      }
+    </div>
+    <div class="direction-grid">${options}</div>
   `;
 }
 
@@ -975,6 +1087,25 @@ function setupRangeFilters() {
 /** チップ型フィルターをまとめて再描画する */
 function renderAllChipFilters() {
   renderLayoutFilter();
+  renderDirectionFilter();
+}
+
+/** 間取りの部屋数グループを一括選択／解除する */
+function toggleLayoutGroupSelection(groupId) {
+  const layouts = getAvailableLayouts();
+  const groups = groupLayoutsByRooms(layouts);
+  const group = groups.find((item) => item.id === groupId);
+  if (!group || group.items.length === 0) return;
+
+  const allSelected = group.items.every((layout) => selectedLayoutKeys.has(layout.key));
+  if (allSelected) {
+    group.items.forEach((layout) => selectedLayoutKeys.delete(layout.key));
+  } else {
+    group.items.forEach((layout) => selectedLayoutKeys.add(layout.key));
+  }
+
+  renderAllChipFilters();
+  refreshPropertyList();
 }
 
 /** チップ型フィルターの操作を初期化する */
@@ -983,6 +1114,14 @@ function setupChipFilterDelegation(container, optionsOrGetter, selectedKeys) {
     typeof optionsOrGetter === "function" ? optionsOrGetter() : optionsOrGetter;
 
   container.addEventListener("click", (event) => {
+    const groupButton = event.target.closest("[data-layout-group]");
+    if (groupButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleLayoutGroupSelection(groupButton.dataset.layoutGroup);
+      return;
+    }
+
     const actionButton = event.target.closest("[data-chip-action]");
     if (!actionButton) return;
 
@@ -1571,6 +1710,19 @@ function setupEventListeners() {
     () => getAvailableLayouts(),
     selectedLayoutKeys
   );
+  if (elements.filterDirection) {
+    setupChipFilterDelegation(
+      elements.filterDirection,
+      () => DIRECTION_OPTIONS,
+      selectedDirectionKeys
+    );
+  }
+  if (elements.filterFloorMin2) {
+    elements.filterFloorMin2.addEventListener("change", () => {
+      filterFloorMin2 = elements.filterFloorMin2.checked;
+      refreshPropertyList();
+    });
+  }
   setupStationPicker();
   setupRangeFilters();
 
