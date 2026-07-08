@@ -27,8 +27,8 @@ const selectedDirectionKeys = new Set();
 let filterFloorMin2 = false;
 /** お気に入りのみ表示するか */
 let filterFavoritesOnly = false;
-/** お気に入り登録済み物件ID */
-const favoritePropertyIds = new Set();
+/** お気に入り登録済み物件（ID → エントリ） */
+const favoriteEntries = new Map();
 /** 保存済み検索条件 */
 let savedSearches = [];
 /** 選択中の駅（最大5件・選択順を保持） */
@@ -181,11 +181,14 @@ const elements = {
   savedSearchName: document.getElementById("saved-search-name"),
   saveSearchBtn: document.getElementById("save-search-btn"),
   savedSearchList: document.getElementById("saved-search-list"),
+  archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
+  archivedFavoritesList: document.getElementById("archived-favorites-list"),
   paginationBottom: document.getElementById("pagination-bottom"),
 };
 
-/** 物件を一意に識別するIDを返す */
+/** 物件を一意に識別するIDを返す（お気に入りは SUUMO URL を優先） */
 function getPropertyId(property) {
+  if (property.listing_url) return String(property.listing_url);
   if (property.url) return String(property.url);
   return [
     property.property_name || "",
@@ -197,11 +200,34 @@ function getPropertyId(property) {
   ].join("|");
 }
 
+/** お気に入り保存用の物件スナップショットを作る */
+function buildFavoriteSnapshot(property) {
+  return {
+    property_name: property.property_name || "",
+    station: property.station || "",
+    walk_minutes: property.walk_minutes ?? null,
+    price_jpy: property.price_jpy ?? null,
+    area_m2: property.area_m2 ?? null,
+    layout: property.layout || "",
+    address: property.address || "",
+    display_state: getDisplayState(property),
+    url: property.url || property.listing_url || "",
+    listing_url: property.listing_url || property.url || "",
+  };
+}
+
 /** 物件インデックスを再構築する */
 function rebuildPropertyIndex() {
   propertyById.clear();
   allProperties.forEach((property) => {
-    propertyById.set(getPropertyId(property), property);
+    const primaryId = getPropertyId(property);
+    propertyById.set(primaryId, property);
+    if (property.listing_url) {
+      propertyById.set(String(property.listing_url), property);
+    }
+    if (property.url) {
+      propertyById.set(String(property.url), property);
+    }
   });
 }
 
@@ -226,13 +252,27 @@ function writeStorageJson(key, value) {
   }
 }
 
+/** お気に入りエントリを正規化する */
+function normalizeFavoriteEntry(raw) {
+  if (typeof raw === "string") {
+    return { id: raw, savedAt: "", snapshot: null };
+  }
+  if (!raw || !raw.id) return null;
+  return {
+    id: String(raw.id),
+    savedAt: raw.savedAt || "",
+    snapshot: raw.snapshot || null,
+  };
+}
+
 /** お気に入りを読み込む */
 function loadFavorites() {
   const stored = readStorageJson(FAVORITES_STORAGE_KEY, []);
-  favoritePropertyIds.clear();
+  favoriteEntries.clear();
   if (Array.isArray(stored)) {
-    stored.forEach((id) => {
-      if (id) favoritePropertyIds.add(String(id));
+    stored.forEach((raw) => {
+      const entry = normalizeFavoriteEntry(raw);
+      if (entry) favoriteEntries.set(entry.id, entry);
     });
   }
   updateFavoritesCount();
@@ -240,31 +280,107 @@ function loadFavorites() {
 
 /** お気に入りを保存する */
 function saveFavorites() {
-  writeStorageJson(FAVORITES_STORAGE_KEY, [...favoritePropertyIds]);
+  const payload = [...favoriteEntries.values()].map((entry) => ({
+    id: entry.id,
+    savedAt: entry.savedAt,
+    snapshot: entry.snapshot,
+  }));
+  writeStorageJson(FAVORITES_STORAGE_KEY, payload);
   updateFavoritesCount();
+}
+
+/** データ更新後にお気に入りスナップショットを同期する */
+function syncFavoriteSnapshots() {
+  let changed = false;
+  favoriteEntries.forEach((entry) => {
+    const property = propertyById.get(entry.id);
+    if (!property) return;
+    const snapshot = buildFavoriteSnapshot(property);
+    const prev = JSON.stringify(entry.snapshot || {});
+    const next = JSON.stringify(snapshot);
+    if (prev !== next) {
+      entry.snapshot = snapshot;
+      changed = true;
+    }
+  });
+  if (changed) saveFavorites();
+}
+
+/** お気に入りIDが登録済みか判定する */
+function isFavoriteId(propertyId) {
+  return favoriteEntries.has(propertyId);
 }
 
 /** お気に入り登録済みか判定する */
 function isFavoriteProperty(property) {
-  return favoritePropertyIds.has(getPropertyId(property));
+  return isFavoriteId(getPropertyId(property));
 }
 
 /** お気に入りの登録状態を切り替える */
 function toggleFavoriteProperty(property) {
   const propertyId = getPropertyId(property);
-  if (favoritePropertyIds.has(propertyId)) {
-    favoritePropertyIds.delete(propertyId);
+  if (favoriteEntries.has(propertyId)) {
+    favoriteEntries.delete(propertyId);
   } else {
-    favoritePropertyIds.add(propertyId);
+    favoriteEntries.set(propertyId, {
+      id: propertyId,
+      savedAt: new Date().toISOString(),
+      snapshot: buildFavoriteSnapshot(property),
+    });
   }
   saveFavorites();
+  renderArchivedFavorites();
+}
+
+/** お気に入り物件を解決する（データになければスナップショットを使う） */
+function resolveFavoriteProperty(entry) {
+  const property = propertyById.get(entry.id);
+  if (property) return property;
+  if (!entry.snapshot) return null;
+
+  const snapshot = entry.snapshot;
+  const isSold = snapshot.display_state === "成約済み";
+  return {
+    ...snapshot,
+    listing_url: entry.id,
+    url: snapshot.url || entry.id,
+    is_archived_snapshot: true,
+    is_active: false,
+    is_delisted: !isSold,
+    is_sold: isSold,
+    display_state: snapshot.display_state || "掲載終了",
+  };
+}
+
+/** 掲載終了・成約など、掲載中でないお気に入りか判定する */
+function isArchivedFavoriteEntry(entry) {
+  const property = resolveFavoriteProperty(entry);
+  if (!property) return true;
+  return !isActiveProperty(property);
+}
+
+/** 掲載中のお気に入り一覧を返す */
+function getActiveFavoriteEntries() {
+  return [...favoriteEntries.values()].filter((entry) => !isArchivedFavoriteEntry(entry));
+}
+
+/** 掲載終了のお気に入り一覧を返す */
+function getArchivedFavoriteEntries() {
+  return [...favoriteEntries.values()].filter((entry) => isArchivedFavoriteEntry(entry));
 }
 
 /** お気に入り件数表示を更新する */
 function updateFavoritesCount() {
   if (!elements.favoritesCount) return;
-  const count = favoritePropertyIds.size;
-  elements.favoritesCount.textContent = `${count.toLocaleString()}件登録`;
+  const activeCount = getActiveFavoriteEntries().length;
+  const archivedCount = getArchivedFavoriteEntries().length;
+  const total = favoriteEntries.size;
+  if (archivedCount > 0) {
+    elements.favoritesCount.textContent =
+      `${total.toLocaleString()}件登録（掲載中 ${activeCount.toLocaleString()} / 掲載終了 ${archivedCount.toLocaleString()}）`;
+    return;
+  }
+  elements.favoritesCount.textContent = `${total.toLocaleString()}件登録`;
 }
 
 /** 保存済み検索条件を読み込む */
@@ -275,7 +391,7 @@ function loadSavedSearches() {
 
 /** 保存済み検索条件を保存する */
 function persistSavedSearches() {
-  writeStorageJson(SAVED_SEARCHES_STORAGE_KEY, savedSearches);
+  return writeStorageJson(SAVED_SEARCHES_STORAGE_KEY, savedSearches);
 }
 
 /** 現在のフィルター状態をシリアライズする */
@@ -482,7 +598,7 @@ function applyFilterState(state) {
 /** お気に入りボタン HTML を返す */
 function renderFavoriteCell(property) {
   const propertyId = getPropertyId(property);
-  const isActive = favoritePropertyIds.has(propertyId);
+  const isActive = isFavoriteId(propertyId);
   return `
     <div class="${getCellClass("favorite")}">
       <button
@@ -494,6 +610,71 @@ function renderFavoriteCell(property) {
       >★</button>
     </div>
   `;
+}
+
+/** 掲載終了お気に入りの状態バッジクラスを返す */
+function getArchivedFavoriteStatusClass(property) {
+  if (isSoldProperty(property)) return "status-sold";
+  if (isDelistedProperty(property)) return "status-delisted";
+  return "status-delisted";
+}
+
+/** 掲載終了お気に入り一覧を描画する */
+function renderArchivedFavorites() {
+  if (!elements.archivedFavoritesPanel || !elements.archivedFavoritesList) return;
+
+  const archivedEntries = getArchivedFavoriteEntries();
+  updateFavoritesCount();
+
+  if (archivedEntries.length === 0) {
+    elements.archivedFavoritesPanel.hidden = true;
+    elements.archivedFavoritesList.innerHTML = "";
+    return;
+  }
+
+  elements.archivedFavoritesPanel.hidden = false;
+  elements.archivedFavoritesList.innerHTML = archivedEntries
+    .map((entry) => {
+      const property = resolveFavoriteProperty(entry);
+      if (!property) return "";
+
+      const propertyId = entry.id;
+      const displayState = getDisplayState(property);
+      const statusClass = getArchivedFavoriteStatusClass(property);
+      const linkHref = getPropertyLinkHref(property);
+      const linkLabel = getPropertyLinkLabel(property);
+      const linkMarkup = linkHref
+        ? `<a href="${escapeHtml(linkHref)}" target="_blank" rel="noopener noreferrer" class="link">${escapeHtml(linkLabel)}</a>`
+        : `<span class="link-muted">リンクなし</span>`;
+
+      return `
+        <article class="archived-favorite-card" data-property-id="${escapeHtml(propertyId)}">
+          <div class="archived-favorite-main">
+            <div class="archived-favorite-title-row">
+              <strong>${escapeHtml(property.property_name || "名称不明")}</strong>
+              <span class="status-badge ${statusClass}">${escapeHtml(displayState)}</span>
+            </div>
+            <p class="archived-favorite-meta">
+              ${escapeHtml(property.station || "-")} /
+              徒歩 ${escapeHtml(property.walk_minutes ?? "-")}分 /
+              ${escapeHtml(formatPrice(property.price_jpy))} /
+              ${escapeHtml(formatLayoutLabel(property.layout))} /
+              ${escapeHtml(formatDecimal(property.area_m2, "㎡"))}
+            </p>
+            <p class="archived-favorite-address">${escapeHtml(property.address || "")}</p>
+          </div>
+          <div class="archived-favorite-actions">
+            ${linkMarkup}
+            <button
+              type="button"
+              class="page-btn is-danger archived-favorite-remove"
+              data-property-id="${escapeHtml(propertyId)}"
+            >お気に入り解除</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 /** 全角英数字を半角に変換する */
@@ -603,6 +784,7 @@ function formatPrice(priceJpy) {
 /** 物件の売り出し/成約状態を判定する */
 function getDisplayState(property) {
   if (property.display_state) return property.display_state;
+  if (property.is_delisted === true) return "掲載終了";
   if (property.is_sold === true) return "成約済み";
   return "売り出し中";
 }
@@ -632,9 +814,14 @@ function isSoldProperty(property) {
   return property.is_sold === true || getDisplayState(property) === "成約済み";
 }
 
+/** 掲載終了かどうか */
+function isDelistedProperty(property) {
+  return property.is_delisted === true || getDisplayState(property) === "掲載終了";
+}
+
 /** 売り出し中かどうか */
 function isActiveProperty(property) {
-  return !isSoldProperty(property);
+  return !isSoldProperty(property) && !isDelistedProperty(property);
 }
 
 /** 駅名で物件が該当するか判定する（単一駅） */
@@ -788,7 +975,7 @@ function matchesAgeFilter(property) {
 /** お気に入りフィルターに合うか判定する */
 function matchesFavoritesFilter(property) {
   if (!filterFavoritesOnly) return true;
-  return favoritePropertyIds.has(getPropertyId(property));
+  return isFavoriteProperty(property) && isActiveProperty(property);
 }
 
 /** 間取りフィルターに合うか判定する */
@@ -827,6 +1014,9 @@ function matchesDirectionFilter(property) {
 
 /** 表示対象フィルターに合うか判定する */
 function matchesStatusFilter(property, statusFilter) {
+  if (isDelistedProperty(property)) {
+    return false;
+  }
   switch (statusFilter) {
     case "active":
       return isActiveProperty(property);
@@ -836,7 +1026,7 @@ function matchesStatusFilter(property, statusFilter) {
       return isBargainProperty(property);
     case "all":
     default:
-      return true;
+      return isActiveProperty(property) || isSoldProperty(property);
   }
 }
 
@@ -1809,6 +1999,8 @@ function renderProperties() {
 
     elements.propertyList.appendChild(row);
   });
+
+  renderArchivedFavorites();
 }
 
 /** HTML 属性用にエスケープする */
@@ -2074,6 +2266,7 @@ async function loadData() {
   marketSummary = data.market_summary || {};
   rebuildPropertyIndex();
   loadFavorites();
+  syncFavoriteSnapshots();
   loadSavedSearches();
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
@@ -2159,11 +2352,25 @@ function setupEventListeners() {
       if (!property) return;
 
       toggleFavoriteProperty(property);
-      const isActive = favoritePropertyIds.has(propertyId);
+      const isActive = isFavoriteId(propertyId);
       favoriteButton.classList.toggle("is-active", isActive);
       favoriteButton.setAttribute("aria-pressed", isActive ? "true" : "false");
       favoriteButton.setAttribute("aria-label", isActive ? "お気に入り解除" : "お気に入り登録");
 
+      if (filterFavoritesOnly) {
+        refreshPropertyList();
+      }
+    });
+  }
+  if (elements.archivedFavoritesList) {
+    elements.archivedFavoritesList.addEventListener("click", (event) => {
+      const removeButton = event.target.closest(".archived-favorite-remove");
+      if (!removeButton) return;
+      const propertyId = removeButton.dataset.propertyId;
+      if (!propertyId || !favoriteEntries.has(propertyId)) return;
+      favoriteEntries.delete(propertyId);
+      saveFavorites();
+      renderArchivedFavorites();
       if (filterFavoritesOnly) {
         refreshPropertyList();
       }
