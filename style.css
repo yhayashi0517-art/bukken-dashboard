@@ -93,12 +93,14 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 .sidebar-block {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 }
 
 .sidebar-actions {
@@ -123,6 +125,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .saved-search-form {
@@ -139,6 +142,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
 }
 
 .saved-search-empty {
@@ -151,10 +155,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
   padding: 0.55rem 0.65rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg);
+  overflow: hidden;
 }
 
 .saved-search-item-head {
@@ -162,6 +168,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .saved-search-item-name {
@@ -169,12 +176,17 @@ body {
   font-weight: 600;
   color: var(--text);
   line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .saved-search-item-summary {
+  margin: 0;
   font-size: 0.72rem;
   color: var(--text-tertiary);
-  line-height: 1.4;
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .saved-search-item-actions {

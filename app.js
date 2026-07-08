@@ -427,8 +427,20 @@ function summarizeFilterState(state) {
 
   if (state.favoritesOnly) parts.push("お気に入り");
   if (state.floorMin2) parts.push("2階以上");
-  if (state.layouts?.length) parts.push(state.layouts.join("/"));
-  if (state.directions?.length) parts.push(state.directions.join("・"));
+  if (state.layouts?.length) {
+    parts.push(
+      state.layouts.length <= 4
+        ? state.layouts.join("/")
+        : `間取り ${state.layouts.length}件`
+    );
+  }
+  if (state.directions?.length) {
+    parts.push(
+      state.directions.length <= 4
+        ? state.directions.join("・")
+        : `方角 ${state.directions.length}件`
+    );
+  }
 
   const ranges = state.ranges || {};
   if (ranges.price && isSerializedRangeActive(ranges.price, "price")) {
