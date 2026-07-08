@@ -14,8 +14,6 @@ const PAGE_SIZE = 100;
 
 let allProperties = [];
 let marketSummary = {};
-/** 売り出し中物件から構築する「物件名 → 所在地（町名）」の索引 */
-let buildingLocalityIndex = new Map();
 let currentPage = 1;
 const selectedLayoutKeys = new Set();
 /** 選択中の駅（最大5件・選択順を保持） */
@@ -104,6 +102,7 @@ const elements = {
   propertyList: document.getElementById("property-list"),
   emptyMessage: document.getElementById("empty-message"),
   reloadBtn: document.getElementById("reload-btn"),
+  clearFiltersBtn: document.getElementById("clear-filters-btn"),
   paginationBottom: document.getElementById("pagination-bottom"),
 };
 
@@ -509,43 +508,56 @@ function extractAddressLocalities(address) {
   return localities;
 }
 
-/** 売り出し中物件から物件名ごとの所在地索引を構築する */
-function buildBuildingLocalityIndex(properties) {
-  const index = new Map();
-
-  properties.forEach((property) => {
-    if (!property.is_active || !property.property_name) return;
-
-    const localities = extractAddressLocalities(property.address);
-    if (localities.size === 0) return;
-
-    if (!index.has(property.property_name)) {
-      index.set(property.property_name, new Set());
-    }
-    const bucket = index.get(property.property_name);
-    localities.forEach((locality) => bucket.add(locality));
-  });
-
-  return index;
-}
-
-/** 所在地が物件名の既知所在地と整合するか判定する */
-function matchesKnownBuildingLocality(property) {
+/** 成約物件が売り出し中の個別物件と整合するか判定する */
+function matchesKnownBuildingProfile(property) {
   const propertyName = property.property_name;
-  if (!propertyName || !buildingLocalityIndex.has(propertyName)) {
-    return true;
-  }
+  if (!propertyName) return true;
 
-  const allowedLocalities = buildingLocalityIndex.get(propertyName);
+  const activeMatches = allProperties.filter(
+    (item) => item.is_active && item.property_name === propertyName
+  );
+  if (activeMatches.length === 0) return true;
+
+  const walk = Number(property.walk_minutes);
+  const age = Number(property.age_years);
+  const area = Number(property.area_m2);
   const propertyLocalities = extractAddressLocalities(property.address);
-  if (propertyLocalities.size === 0 || allowedLocalities.size === 0) {
-    return true;
-  }
 
-  for (const locality of propertyLocalities) {
-    if (allowedLocalities.has(locality)) return true;
-  }
-  return false;
+  return activeMatches.some((active) => {
+    const activeWalk = Number(active.walk_minutes);
+    const activeAge = Number(active.age_years);
+    const activeArea = Number(active.area_m2);
+
+    if (!Number.isNaN(walk) && !Number.isNaN(activeWalk) && Math.abs(walk - activeWalk) > 1) {
+      return false;
+    }
+    if (!Number.isNaN(age) && !Number.isNaN(activeAge) && Math.abs(age - activeAge) > 3) {
+      return false;
+    }
+    if (
+      !Number.isNaN(area) &&
+      !Number.isNaN(activeArea) &&
+      Math.abs(area - activeArea) / Math.max(area, activeArea) > 0.45
+    ) {
+      return false;
+    }
+
+    if (propertyLocalities.size > 0) {
+      const activeLocalities = extractAddressLocalities(active.address);
+      if (activeLocalities.size > 0) {
+        let localityMatched = false;
+        for (const locality of propertyLocalities) {
+          if (activeLocalities.has(locality)) {
+            localityMatched = true;
+            break;
+          }
+        }
+        if (!localityMatched) return false;
+      }
+    }
+
+    return true;
+  });
 }
 
 /** キーワード検索に合うか判定する */
@@ -570,7 +582,7 @@ function matchesKeywordSearch(property, keyword) {
 
   const nameMatches = (property.property_name || "").toLowerCase().includes(keyword);
   if (property.is_sold && property.property_name_inferred && nameMatches) {
-    return matchesKnownBuildingLocality(property);
+    return matchesKnownBuildingProfile(property);
   }
 
   return true;
@@ -706,6 +718,50 @@ function renderTableHeader() {
       renderProperties();
     });
   });
+}
+
+/** レンジスライダーの初期値を返す */
+function getDefaultRangeFilterState() {
+  const defaultThreshold = Number(marketSummary.bargain_threshold_pct ?? 10);
+  return {
+    area: { min: RANGE_FILTER_CONFIG.area.min, max: RANGE_FILTER_CONFIG.area.max },
+    age: { min: RANGE_FILTER_CONFIG.age.min, max: RANGE_FILTER_CONFIG.age.max },
+    walk: { min: RANGE_FILTER_CONFIG.walk.min, max: RANGE_FILTER_CONFIG.walk.max },
+    bargain: {
+      min: Number.isNaN(defaultThreshold) ? 10 : defaultThreshold,
+      max: RANGE_FILTER_CONFIG.bargain.max,
+    },
+  };
+}
+
+/** レンジスライダーの表示をすべて更新する */
+function updateAllRangeFilterDisplays() {
+  [elements.filterArea, elements.filterAge, elements.filterWalk, elements.filterBargain].forEach(
+    (container) => {
+      if (container) updateRangeFilterDisplay(container);
+    }
+  );
+}
+
+/** すべてのフィルター条件を初期状態に戻す */
+function clearAllFilters() {
+  elements.searchInput.value = "";
+  elements.filterStatus.value = "active";
+  selectedStations.splice(0, selectedStations.length);
+  selectedLayoutKeys.clear();
+  stationPickerActiveIndex = -1;
+
+  const defaults = getDefaultRangeFilterState();
+  Object.keys(defaults).forEach((rangeId) => {
+    rangeFilterState[rangeId] = { ...defaults[rangeId] };
+  });
+
+  renderStationPicker();
+  renderAllChipFilters();
+  updateAllRangeFilterDisplays();
+  updateBargainStat();
+  renderMarketSummary();
+  refreshPropertyList();
 }
 
 /** フィルター変更後に一覧を先頭ページから再描画する */
@@ -1487,7 +1543,6 @@ async function loadData() {
 
   allProperties = data.properties || [];
   marketSummary = data.market_summary || {};
-  buildingLocalityIndex = buildBuildingLocalityIndex(allProperties);
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
 
@@ -1521,6 +1576,10 @@ function setupEventListeners() {
 
   elements.filterStatus.addEventListener("change", refreshPropertyList);
   elements.searchInput.addEventListener("input", refreshPropertyList);
+
+  if (elements.clearFiltersBtn) {
+    elements.clearFiltersBtn.addEventListener("click", clearAllFilters);
+  }
 
   elements.reloadBtn.addEventListener("click", async () => {
     try {
