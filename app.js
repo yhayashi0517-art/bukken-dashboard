@@ -11,8 +11,13 @@ const DATA_URL = resolveAssetUrl("data/properties.json");
 const DATA_INDEX_URL = resolveAssetUrl("data/properties-index.json");
 const STATIONS_URL = resolveAssetUrl("data/stations.json");
 const PAGE_SIZE = 100;
+const FAVORITES_STORAGE_KEY = "bukken-dashboard:favorites";
+const SAVED_SEARCHES_STORAGE_KEY = "bukken-dashboard:saved-searches";
+const MAX_SAVED_SEARCHES = 20;
 
 let allProperties = [];
+/** 物件ID → 物件データ */
+const propertyById = new Map();
 let marketSummary = {};
 let currentPage = 1;
 const selectedLayoutKeys = new Set();
@@ -20,6 +25,12 @@ const selectedLayoutKeys = new Set();
 const selectedDirectionKeys = new Set();
 /** 2階以上のみ表示するか */
 let filterFloorMin2 = false;
+/** お気に入りのみ表示するか */
+let filterFavoritesOnly = false;
+/** お気に入り登録済み物件ID */
+const favoritePropertyIds = new Set();
+/** 保存済み検索条件 */
+let savedSearches = [];
 /** 選択中の駅（最大5件・選択順を保持） */
 const selectedStations = [];
 const MAX_SELECTED_STATIONS = 5;
@@ -128,6 +139,7 @@ const rangeFilterState = {
 };
 
 const TABLE_COLUMNS = [
+  { id: "favorite", label: "★", sortable: false, className: "col-favorite", align: "center" },
   { id: "plan", label: "間取り図", sortable: false, className: "col-plan", align: "center" },
   { id: "property_name", label: "物件名", sortable: true, type: "string", className: "col-name", align: "start" },
   { id: "display_state", label: "状態", sortable: true, type: "string", className: "col-state", align: "center" },
@@ -164,8 +176,325 @@ const elements = {
   emptyMessage: document.getElementById("empty-message"),
   reloadBtn: document.getElementById("reload-btn"),
   clearFiltersBtn: document.getElementById("clear-filters-btn"),
+  filterFavoritesOnly: document.getElementById("filter-favorites-only"),
+  favoritesCount: document.getElementById("favorites-count"),
+  savedSearchName: document.getElementById("saved-search-name"),
+  saveSearchBtn: document.getElementById("save-search-btn"),
+  savedSearchList: document.getElementById("saved-search-list"),
   paginationBottom: document.getElementById("pagination-bottom"),
 };
+
+/** 物件を一意に識別するIDを返す */
+function getPropertyId(property) {
+  if (property.url) return String(property.url);
+  return [
+    property.property_name || "",
+    property.station || "",
+    property.price_jpy || "",
+    property.area_m2 || "",
+    property.layout || "",
+    property.scraped_at || "",
+  ].join("|");
+}
+
+/** 物件インデックスを再構築する */
+function rebuildPropertyIndex() {
+  propertyById.clear();
+  allProperties.forEach((property) => {
+    propertyById.set(getPropertyId(property), property);
+  });
+}
+
+/** localStorage から JSON を読み込む */
+function readStorageJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+/** localStorage に JSON を保存する */
+function writeStorageJson(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** お気に入りを読み込む */
+function loadFavorites() {
+  const stored = readStorageJson(FAVORITES_STORAGE_KEY, []);
+  favoritePropertyIds.clear();
+  if (Array.isArray(stored)) {
+    stored.forEach((id) => {
+      if (id) favoritePropertyIds.add(String(id));
+    });
+  }
+  updateFavoritesCount();
+}
+
+/** お気に入りを保存する */
+function saveFavorites() {
+  writeStorageJson(FAVORITES_STORAGE_KEY, [...favoritePropertyIds]);
+  updateFavoritesCount();
+}
+
+/** お気に入り登録済みか判定する */
+function isFavoriteProperty(property) {
+  return favoritePropertyIds.has(getPropertyId(property));
+}
+
+/** お気に入りの登録状態を切り替える */
+function toggleFavoriteProperty(property) {
+  const propertyId = getPropertyId(property);
+  if (favoritePropertyIds.has(propertyId)) {
+    favoritePropertyIds.delete(propertyId);
+  } else {
+    favoritePropertyIds.add(propertyId);
+  }
+  saveFavorites();
+}
+
+/** お気に入り件数表示を更新する */
+function updateFavoritesCount() {
+  if (!elements.favoritesCount) return;
+  const count = favoritePropertyIds.size;
+  elements.favoritesCount.textContent = `${count.toLocaleString()}件登録`;
+}
+
+/** 保存済み検索条件を読み込む */
+function loadSavedSearches() {
+  const stored = readStorageJson(SAVED_SEARCHES_STORAGE_KEY, []);
+  savedSearches = Array.isArray(stored) ? stored.filter((item) => item && item.state) : [];
+}
+
+/** 保存済み検索条件を保存する */
+function persistSavedSearches() {
+  writeStorageJson(SAVED_SEARCHES_STORAGE_KEY, savedSearches);
+}
+
+/** 現在のフィルター状態をシリアライズする */
+function captureFilterState() {
+  return {
+    search: elements.searchInput.value,
+    status: elements.filterStatus.value,
+    stations: [...selectedStations],
+    layouts: [...selectedLayoutKeys],
+    directions: [...selectedDirectionKeys],
+    floorMin2: filterFloorMin2,
+    favoritesOnly: filterFavoritesOnly,
+    ranges: JSON.parse(JSON.stringify(rangeFilterState)),
+    sort: { ...sortState },
+  };
+}
+
+/** フィルター状態の表示用ラベルを生成する */
+function summarizeFilterState(state) {
+  const parts = [];
+
+  if (state.stations?.length) {
+    const stationText = state.stations.slice(0, 2).join("・");
+    parts.push(
+      state.stations.length > 2 ? `${stationText}ほか${state.stations.length}駅` : stationText
+    );
+  }
+
+  if (state.status === "sold") parts.push("成約のみ");
+  else if (state.status === "bargain") parts.push("割安のみ");
+  else if (state.status === "all") parts.push("すべて");
+  else parts.push("売出中");
+
+  if (state.favoritesOnly) parts.push("お気に入り");
+  if (state.floorMin2) parts.push("2階以上");
+  if (state.layouts?.length) parts.push(state.layouts.join("/"));
+  if (state.directions?.length) parts.push(state.directions.join("・"));
+
+  const ranges = state.ranges || {};
+  if (ranges.price && isSerializedRangeActive(ranges.price, "price")) {
+    parts.push(
+      `価格 ${formatRangeEndpoint(ranges.price.min, RANGE_FILTER_CONFIG.price, false)}～${formatRangeEndpoint(ranges.price.max, RANGE_FILTER_CONFIG.price, true)}`
+    );
+  }
+  if (ranges.area && isSerializedRangeActive(ranges.area, "area")) {
+    parts.push(`面積 ${ranges.area.min}～${ranges.area.max}㎡`);
+  }
+  if (ranges.walk && isSerializedRangeActive(ranges.walk, "walk")) {
+    parts.push(`徒歩 ${ranges.walk.min}～${ranges.walk.max}分`);
+  }
+  if (state.search?.trim()) parts.push(`「${state.search.trim()}」`);
+
+  return parts.join(" / ") || "すべての条件";
+}
+
+/** 保存済みレンジが有効か判定する */
+function isSerializedRangeActive(rangeState, rangeId) {
+  const config = RANGE_FILTER_CONFIG[rangeId];
+  if (!config || !rangeState) return false;
+  const minActive = Number(rangeState.min) > config.min;
+  const maxActive = !(config.unlimitedAtMax && Number(rangeState.max) >= config.max) && Number(rangeState.max) < config.max;
+  return minActive || maxActive;
+}
+
+/** 保存名のデフォルトを生成する */
+function buildDefaultSearchName(state) {
+  const summary = summarizeFilterState(state);
+  if (summary === "すべての条件") {
+    return `検索条件 ${new Date().toLocaleString("ja-JP")}`;
+  }
+  return summary.length > 40 ? `${summary.slice(0, 37)}...` : summary;
+}
+
+/** 保存済み検索条件一覧を描画する */
+function renderSavedSearches() {
+  if (!elements.savedSearchList) return;
+
+  if (savedSearches.length === 0) {
+    elements.savedSearchList.innerHTML = `<p class="saved-search-empty">保存した条件はまだありません。</p>`;
+    return;
+  }
+
+  elements.savedSearchList.innerHTML = savedSearches
+    .map((item) => {
+      const name = escapeHtml(item.name || "名称なし");
+      const summary = escapeHtml(summarizeFilterState(item.state));
+      return `
+        <article class="saved-search-item" data-search-id="${escapeHtml(item.id)}">
+          <div class="saved-search-item-head">
+            <strong class="saved-search-item-name">${name}</strong>
+          </div>
+          <p class="saved-search-item-summary">${summary}</p>
+          <div class="saved-search-item-actions">
+            <button type="button" class="page-btn" data-search-action="apply">適用</button>
+            <button type="button" class="page-btn is-danger" data-search-action="delete">削除</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+/** 現在の検索条件を保存する */
+function saveCurrentSearch() {
+  const state = captureFilterState();
+  const inputName = elements.savedSearchName?.value.trim() || "";
+  const name = inputName || buildDefaultSearchName(state);
+
+  if (savedSearches.length >= MAX_SAVED_SEARCHES) {
+    alert(`保存できる検索条件は最大 ${MAX_SAVED_SEARCHES} 件です。不要な条件を削除してください。`);
+    return;
+  }
+
+  savedSearches.unshift({
+    id: `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    createdAt: new Date().toISOString(),
+    state,
+  });
+
+  if (!persistSavedSearches()) {
+    savedSearches.shift();
+    alert("検索条件の保存に失敗しました。ブラウザの保存容量を確認してください。");
+    return;
+  }
+
+  if (elements.savedSearchName) {
+    elements.savedSearchName.value = "";
+  }
+  renderSavedSearches();
+}
+
+/** 保存済み検索条件を適用する */
+function applySavedSearch(searchId) {
+  const saved = savedSearches.find((item) => item.id === searchId);
+  if (!saved) return;
+  applyFilterState(saved.state);
+}
+
+/** 保存済み検索条件を削除する */
+function deleteSavedSearch(searchId) {
+  const index = savedSearches.findIndex((item) => item.id === searchId);
+  if (index === -1) return;
+  savedSearches.splice(index, 1);
+  persistSavedSearches();
+  renderSavedSearches();
+}
+
+/** フィルター状態を復元する */
+function applyFilterState(state) {
+  if (!state) return;
+
+  elements.searchInput.value = state.search || "";
+  elements.filterStatus.value = state.status || "active";
+
+  selectedStations.splice(0, selectedStations.length);
+  (state.stations || []).forEach((station) => {
+    if (station && selectedStations.length < MAX_SELECTED_STATIONS) {
+      selectedStations.push(station);
+    }
+  });
+
+  selectedLayoutKeys.clear();
+  (state.layouts || []).forEach((key) => selectedLayoutKeys.add(key));
+
+  selectedDirectionKeys.clear();
+  (state.directions || []).forEach((key) => selectedDirectionKeys.add(key));
+
+  filterFloorMin2 = Boolean(state.floorMin2);
+  if (elements.filterFloorMin2) {
+    elements.filterFloorMin2.checked = filterFloorMin2;
+  }
+
+  filterFavoritesOnly = Boolean(state.favoritesOnly);
+  if (elements.filterFavoritesOnly) {
+    elements.filterFavoritesOnly.checked = filterFavoritesOnly;
+  }
+
+  const defaults = getDefaultRangeFilterState();
+  Object.keys(defaults).forEach((rangeId) => {
+    const savedRange = state.ranges?.[rangeId];
+    rangeFilterState[rangeId] = savedRange
+      ? { min: Number(savedRange.min), max: Number(savedRange.max) }
+      : { ...defaults[rangeId] };
+  });
+
+  if (state.sort?.column) {
+    sortState = {
+      column: state.sort.column,
+      direction: state.sort.direction === "desc" ? "desc" : "asc",
+    };
+  }
+
+  stationPickerActiveIndex = -1;
+  renderStationPicker();
+  renderAllChipFilters();
+  updateAllRangeFilterDisplays();
+  renderTableHeader();
+  updateBargainStat();
+  renderMarketSummary();
+  refreshPropertyList();
+}
+
+/** お気に入りボタン HTML を返す */
+function renderFavoriteCell(property) {
+  const propertyId = getPropertyId(property);
+  const isActive = favoritePropertyIds.has(propertyId);
+  return `
+    <div class="${getCellClass("favorite")}">
+      <button
+        type="button"
+        class="favorite-btn${isActive ? " is-active" : ""}"
+        data-property-id="${escapeHtml(propertyId)}"
+        aria-label="${isActive ? "お気に入り解除" : "お気に入り登録"}"
+        aria-pressed="${isActive ? "true" : "false"}"
+      >★</button>
+    </div>
+  `;
+}
 
 /** 全角英数字を半角に変換する */
 function toHalfWidth(text) {
@@ -456,6 +785,12 @@ function matchesAgeFilter(property) {
   return matchesNumericRange(Number(property.age_years), "age");
 }
 
+/** お気に入りフィルターに合うか判定する */
+function matchesFavoritesFilter(property) {
+  if (!filterFavoritesOnly) return true;
+  return favoritePropertyIds.has(getPropertyId(property));
+}
+
 /** 間取りフィルターに合うか判定する */
 function matchesLayoutFilter(property) {
   if (selectedLayoutKeys.size === 0) return true;
@@ -701,6 +1036,7 @@ function getFilteredProperties() {
     if (!matchesLayoutFilter(property)) return false;
     if (!matchesFloorFilter(property)) return false;
     if (!matchesDirectionFilter(property)) return false;
+    if (!matchesFavoritesFilter(property)) return false;
     if (!matchesPriceFilter(property)) return false;
     if (!matchesAreaFilter(property)) return false;
     if (!matchesWalkFilter(property)) return false;
@@ -860,8 +1196,12 @@ function clearAllFilters() {
   selectedLayoutKeys.clear();
   selectedDirectionKeys.clear();
   filterFloorMin2 = false;
+  filterFavoritesOnly = false;
   if (elements.filterFloorMin2) {
     elements.filterFloorMin2.checked = false;
+  }
+  if (elements.filterFavoritesOnly) {
+    elements.filterFavoritesOnly.checked = false;
   }
   stationPickerActiveIndex = -1;
 
@@ -1441,6 +1781,7 @@ function renderProperties() {
       : "";
 
     row.innerHTML = `
+      ${renderFavoriteCell(property)}
       ${renderFloorPlanCell(property)}
       <div class="${getCellClass("property_name")}">
         <div class="name-line">
@@ -1731,6 +2072,9 @@ async function loadData() {
 
   allProperties = data.properties || [];
   marketSummary = data.market_summary || {};
+  rebuildPropertyIndex();
+  loadFavorites();
+  loadSavedSearches();
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
 
@@ -1746,6 +2090,7 @@ async function loadData() {
   const propertyStations = [...new Set(allProperties.map((property) => property.station).filter(Boolean))];
   setStationOptions(mergeStationOptions(catalogStations, propertyStations.length ? propertyStations : data.stations));
   renderAllChipFilters();
+  renderSavedSearches();
   renderTableHeader();
   renderMarketSummary();
   resetPage();
@@ -1770,6 +2115,58 @@ function setupEventListeners() {
     elements.filterFloorMin2.addEventListener("change", () => {
       filterFloorMin2 = elements.filterFloorMin2.checked;
       refreshPropertyList();
+    });
+  }
+  if (elements.filterFavoritesOnly) {
+    elements.filterFavoritesOnly.addEventListener("change", () => {
+      filterFavoritesOnly = elements.filterFavoritesOnly.checked;
+      refreshPropertyList();
+    });
+  }
+  if (elements.saveSearchBtn) {
+    elements.saveSearchBtn.addEventListener("click", saveCurrentSearch);
+  }
+  if (elements.savedSearchName) {
+    elements.savedSearchName.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveCurrentSearch();
+      }
+    });
+  }
+  if (elements.savedSearchList) {
+    elements.savedSearchList.addEventListener("click", (event) => {
+      const actionButton = event.target.closest("[data-search-action]");
+      if (!actionButton) return;
+      const item = actionButton.closest("[data-search-id]");
+      if (!item) return;
+      const searchId = item.dataset.searchId;
+      if (actionButton.dataset.searchAction === "apply") {
+        applySavedSearch(searchId);
+        return;
+      }
+      if (actionButton.dataset.searchAction === "delete") {
+        deleteSavedSearch(searchId);
+      }
+    });
+  }
+  if (elements.propertyList) {
+    elements.propertyList.addEventListener("click", (event) => {
+      const favoriteButton = event.target.closest(".favorite-btn");
+      if (!favoriteButton) return;
+      const propertyId = favoriteButton.dataset.propertyId;
+      const property = propertyById.get(propertyId);
+      if (!property) return;
+
+      toggleFavoriteProperty(property);
+      const isActive = favoritePropertyIds.has(propertyId);
+      favoriteButton.classList.toggle("is-active", isActive);
+      favoriteButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+      favoriteButton.setAttribute("aria-label", isActive ? "お気に入り解除" : "お気に入り登録");
+
+      if (filterFavoritesOnly) {
+        refreshPropertyList();
+      }
     });
   }
   setupStationPicker();

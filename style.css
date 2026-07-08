@@ -18,7 +18,7 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
   --sidebar-width: 280px;
-  --list-columns: 88px minmax(180px, 1.6fr) 92px 72px 64px 108px 108px 72px 56px 72px 56px 64px 108px 64px;
+  --list-columns: 40px 88px minmax(180px, 1.6fr) 92px 72px 64px 108px 108px 72px 56px 72px 56px 64px 108px 64px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
 }
 
@@ -111,6 +111,122 @@ body {
   width: 100%;
   min-height: 2.35rem;
   font-size: 0.82rem;
+}
+
+.favorites-count {
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.saved-search-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.saved-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.saved-search-form .page-btn {
+  width: 100%;
+}
+
+.saved-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.saved-search-empty {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.saved-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.saved-search-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.saved-search-item-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.saved-search-item-summary {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.saved-search-item-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.saved-search-item-actions .page-btn {
+  min-width: auto;
+  padding: 0 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.saved-search-item-actions .page-btn.is-danger {
+  color: #b42318;
+  border-color: #f2c6c2;
+}
+
+.favorite-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.favorite-btn:hover {
+  border-color: #f5c542;
+  color: #d4a017;
+  transform: scale(1.05);
+}
+
+.favorite-btn.is-active {
+  border-color: #f5c542;
+  background: #fff8e1;
+  color: #d4a017;
+}
+
+.col-favorite {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .field-label {
@@ -1035,7 +1151,7 @@ body {
 
 @media (max-width: 1200px) {
   :root {
-    --list-columns: 80px minmax(160px, 1.4fr) 84px 68px 56px 96px 96px 68px 52px 68px 52px 56px 96px 56px;
+    --list-columns: 36px 80px minmax(160px, 1.4fr) 84px 68px 56px 96px 96px 68px 52px 68px 52px 56px 96px 56px;
   }
 
   .property-table {

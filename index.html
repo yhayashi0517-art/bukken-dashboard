@@ -65,6 +65,30 @@
           <div id="filter-bargain" class="range-filter" data-range-id="bargain"></div>
         </div>
 
+        <div class="sidebar-block">
+          <span class="field-label">お気に入り</span>
+          <label class="toggle-option" for="filter-favorites-only">
+            <input type="checkbox" id="filter-favorites-only">
+            <span>お気に入りのみ表示</span>
+          </label>
+          <p id="favorites-count" class="favorites-count">0件登録</p>
+        </div>
+
+        <div class="sidebar-block saved-search-block">
+          <span class="field-label">保存した検索条件</span>
+          <div class="saved-search-form">
+            <input
+              type="text"
+              id="saved-search-name"
+              class="field-input"
+              placeholder="条件名（空欄で自動）"
+              maxlength="40"
+            >
+            <button id="save-search-btn" class="page-btn" type="button">現在の条件を保存</button>
+          </div>
+          <div id="saved-search-list" class="saved-search-list" aria-live="polite"></div>
+        </div>
+
         <div class="sidebar-block sidebar-actions">
           <button id="clear-filters-btn" class="page-btn filter-clear-btn" type="button">
             条件をすべてクリア
@@ -91,6 +115,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=33"></script>
+  <script src="app.js?v=34"></script>
 </body>
 </html>
