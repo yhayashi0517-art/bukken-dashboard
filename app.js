@@ -836,10 +836,49 @@ function isActiveProperty(property) {
   return !isSoldProperty(property) && !isDelistedProperty(property);
 }
 
+/** 駅名を表示・検索用に正規化する */
+function canonicalizeStationName(name) {
+  let text = String(name || "").trim();
+  if (!text) return "";
+  if (text.endsWith("駅")) {
+    text = text.slice(0, -1).trim();
+  }
+  if (/^jujo eki$/i.test(text)) {
+    return "十条";
+  }
+
+  text = text.replace(/（/g, "(").replace(/）/g, ")");
+  if (text.startsWith("押上") && text.includes("スカイツリー")) {
+    return "押上";
+  }
+
+  let match = text.match(/^(.+?)\((東京|神奈川)\)$/);
+  if (match) {
+    return match[1];
+  }
+
+  match = text.match(/^(.+?)\((.+)\)$/);
+  if (match) {
+    const base = match[1];
+    const suffix = match[2];
+    if (/(メトロ|交通局|電鉄|モノレール|エクスプレス|その他)/.test(suffix)) {
+      return base;
+    }
+    const variant = (value) => value.replace(/ケ/g, "ヶ").replace(/ッ/g, "ツ");
+    if (variant(base) === variant(suffix)) {
+      return base.includes("ヶ") || base.includes("ッ") ? base : suffix;
+    }
+  }
+
+  return text;
+}
+
 /** 駅名で物件が該当するか判定する（単一駅） */
 function matchesStation(property, station) {
   if (!station) return true;
-  if (property.station === station) return true;
+  const propertyStation = canonicalizeStationName(property.station);
+  const targetStation = canonicalizeStationName(station);
+  if (propertyStation === targetStation) return true;
 
   const searchable = [
     property.property_name,
@@ -850,7 +889,7 @@ function matchesStation(property, station) {
     .filter(Boolean)
     .join(" ");
 
-  return searchable.includes(station);
+  return searchable.includes(targetStation) || searchable.includes(station);
 }
 
 /** 複数駅のいずれかに該当するか判定する */
@@ -1994,7 +2033,7 @@ function renderProperties() {
         ${referenceText}
       </div>
       <div class="${getCellClass("display_state")}"><span class="status-badge ${statusClass}">${displayState}</span></div>
-      <div class="${getCellClass("station")}">${property.station || "-"}</div>
+      <div class="${getCellClass("station")}">${canonicalizeStationName(property.station) || "-"}</div>
       <div class="${getCellClass("walk_minutes")}">${property.walk_minutes ?? "-"}分</div>
       <div class="${getCellClass("price_jpy")}">${formatPrice(property.price_jpy)}</div>
       <div class="${getCellClass("unit_price_m2")}">${formatDecimal(property.unit_price_m2, " 万円/㎡")}</div>
@@ -2200,7 +2239,7 @@ function setupStationPicker() {
 function mergeStationOptions(catalogStations, propertyStations) {
   const merged = new Set();
   [...(catalogStations || []), ...(propertyStations || [])].forEach((station) => {
-    const normalized = String(station || "").trim();
+    const normalized = canonicalizeStationName(station);
     if (normalized) merged.add(normalized);
   });
   return [...merged].sort((left, right) => left.localeCompare(right, "ja"));
