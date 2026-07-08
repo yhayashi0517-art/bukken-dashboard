@@ -56,8 +56,33 @@ const DIRECTION_ALIASES = {
   西北: "北西",
 };
 
+/** 価格（万円）の表示ラベルを返す */
+function formatPriceManYen(value) {
+  const manYen = Number(value);
+  if (Number.isNaN(manYen)) return "-";
+  if (manYen >= 10000) {
+    const oku = manYen / 10000;
+    return Number.isInteger(oku) ? `${oku}億円` : `${oku.toFixed(1)}億円`;
+  }
+  return `${manYen.toLocaleString()}万円`;
+}
+
 /** レンジスライダー設定（上限値は添付画像に準拠） */
 const RANGE_FILTER_CONFIG = {
+  price: {
+    label: "価格",
+    min: 0,
+    max: 30000,
+    step: 100,
+    unit: "万円",
+    unlimitedAtMax: true,
+    formatValue: (value, isMax, config) => {
+      if (isMax && config.unlimitedAtMax && value >= config.max) {
+        return "制限なし";
+      }
+      return formatPriceManYen(value);
+    },
+  },
   area: {
     label: "面積",
     min: 0,
@@ -95,6 +120,7 @@ const RANGE_FILTER_CONFIG = {
 
 /** レンジスライダーの現在値 */
 const rangeFilterState = {
+  price: { min: 0, max: 30000 },
   area: { min: 0, max: 120 },
   age: { min: 0, max: 50 },
   walk: { min: 0, max: 30 },
@@ -125,6 +151,7 @@ const elements = {
   filterLayout: document.getElementById("filter-layout"),
   filterFloorMin2: document.getElementById("filter-floor-min2"),
   filterDirection: document.getElementById("filter-direction"),
+  filterPrice: document.getElementById("filter-price"),
   filterArea: document.getElementById("filter-area"),
   filterAge: document.getElementById("filter-age"),
   filterWalk: document.getElementById("filter-walk"),
@@ -360,6 +387,9 @@ function updateBargainStat() {
 
 /** レンジ値の表示用ラベルを返す */
 function formatRangeEndpoint(value, config, isMax) {
+  if (typeof config.formatValue === "function") {
+    return config.formatValue(value, isMax, config);
+  }
   if (isMax && config.unlimitedAtMax && value >= config.max) {
     return "制限なし";
   }
@@ -400,6 +430,15 @@ function matchesNumericRange(value, rangeId) {
   if (hasUnlimitedMax(rangeId)) return true;
 
   return value <= state.max;
+}
+
+/** 価格フィルターに合うか判定する（スライダー単位は万円） */
+function matchesPriceFilter(property) {
+  const priceJpy = Number(property.price_jpy);
+  if (Number.isNaN(priceJpy) || priceJpy <= 0) {
+    return !isRangeFilterActive("price");
+  }
+  return matchesNumericRange(priceJpy / 10000, "price");
 }
 
 /** 面積フィルターに合うか判定する */
@@ -662,6 +701,7 @@ function getFilteredProperties() {
     if (!matchesLayoutFilter(property)) return false;
     if (!matchesFloorFilter(property)) return false;
     if (!matchesDirectionFilter(property)) return false;
+    if (!matchesPriceFilter(property)) return false;
     if (!matchesAreaFilter(property)) return false;
     if (!matchesWalkFilter(property)) return false;
     if (!matchesAgeFilter(property)) return false;
@@ -788,6 +828,7 @@ function renderTableHeader() {
 function getDefaultRangeFilterState() {
   const defaultThreshold = Number(marketSummary.bargain_threshold_pct ?? 10);
   return {
+    price: { min: RANGE_FILTER_CONFIG.price.min, max: RANGE_FILTER_CONFIG.price.max },
     area: { min: RANGE_FILTER_CONFIG.area.min, max: RANGE_FILTER_CONFIG.area.max },
     age: { min: RANGE_FILTER_CONFIG.age.min, max: RANGE_FILTER_CONFIG.age.max },
     walk: { min: RANGE_FILTER_CONFIG.walk.min, max: RANGE_FILTER_CONFIG.walk.max },
@@ -800,11 +841,15 @@ function getDefaultRangeFilterState() {
 
 /** レンジスライダーの表示をすべて更新する */
 function updateAllRangeFilterDisplays() {
-  [elements.filterArea, elements.filterAge, elements.filterWalk, elements.filterBargain].forEach(
-    (container) => {
-      if (container) updateRangeFilterDisplay(container);
-    }
-  );
+  [
+    elements.filterPrice,
+    elements.filterArea,
+    elements.filterAge,
+    elements.filterWalk,
+    elements.filterBargain,
+  ].forEach((container) => {
+    if (container) updateRangeFilterDisplay(container);
+  });
 }
 
 /** すべてのフィルター条件を初期状態に戻す */
@@ -1042,8 +1087,8 @@ function setupRangeFilter(container) {
       <input type="range" class="range-max" min="${config.min}" max="${config.max}" step="${config.step}" value="${rangeFilterState[rangeId].max}" aria-label="${config.label}の上限">
     </div>
     <div class="range-scale">
-      <span>${config.min}${config.unit}</span>
-      <span>${config.max}${config.unit}</span>
+      <span>${formatRangeEndpoint(config.min, config, false)}</span>
+      <span>${formatRangeEndpoint(config.max, config, true)}</span>
     </div>
   `;
 
@@ -1077,11 +1122,15 @@ function setupRangeFilter(container) {
 
 /** すべてのレンジスライダーを初期化する */
 function setupRangeFilters() {
-  [elements.filterArea, elements.filterAge, elements.filterWalk, elements.filterBargain].forEach(
-    (container) => {
-      if (container) setupRangeFilter(container);
-    }
-  );
+  [
+    elements.filterPrice,
+    elements.filterArea,
+    elements.filterAge,
+    elements.filterWalk,
+    elements.filterBargain,
+  ].forEach((container) => {
+    if (container) setupRangeFilter(container);
+  });
 }
 
 /** チップ型フィルターをまとめて再描画する */
