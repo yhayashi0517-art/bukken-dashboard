@@ -1695,7 +1695,7 @@ function buildMobileCardSummary(property) {
     formatDecimal(property.area_m2, "㎡"),
     property.age_years != null && property.age_years !== "" ? `築${property.age_years}年` : null,
   ].filter(Boolean);
-  return parts.join(" · ");
+  return parts.join(" ・ ");
 }
 
 /** テーブルヘッダーを描画する */
@@ -2359,8 +2359,11 @@ function renderProperties() {
 
     const stationLabel = canonicalizeStationName(property.station) || "-";
     const walkLabel = `${property.walk_minutes ?? "-"}分`;
+    const stationWalkLabel = stationLabel === "-"
+      ? walkLabel
+      : `${stationLabel} ${walkLabel}`;
     const referenceText = property.reference_price
-      ? `<div class="row-sub row-sub-reference">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}</div>`
+      ? `<div class="row-sub row-sub-reference">相場 ${formatDecimal(property.reference_price, "\u00A0万円/㎡")}</div>`
       : "";
     const cardSummary = buildMobileCardSummary(property);
 
@@ -2374,8 +2377,7 @@ function renderProperties() {
         <div class="row-sub">${property.address || ""}</div>
         <div class="card-inline-meta">
           <span class="status-badge ${statusClass}">${displayState}</span>
-          <span class="card-inline-station">${stationLabel}</span>
-          <span class="card-inline-walk">${walkLabel}</span>
+          <span class="card-inline-station">${stationWalkLabel}</span>
         </div>
         ${referenceText}
       </div>
@@ -2386,12 +2388,12 @@ function renderProperties() {
         <div ${getCellProps("price_jpy", "primary")}">${formatPrice(property.price_jpy)}</div>
         <div ${getCellProps("unit_price_m2", "primary")}>
           <div class="unit-price-cell">
-            <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
+            <span>${formatDecimal(property.unit_price_m2, "\u00A0万円/㎡")}</span>
             ${bargainBadge}
           </div>
         </div>
       </div>
-      <div ${getCellProps("area_m2", "details")}">${formatDecimal(property.area_m2, " ㎡")}</div>
+      <div ${getCellProps("area_m2", "details")}">${formatDecimal(property.area_m2, "㎡")}</div>
       <div ${getCellProps("floor", "details")}">${getDisplayFloor(property)}</div>
       <div ${getCellProps("layout", "details")}">${formatLayoutLabel(property.layout)}</div>
       <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
