@@ -2132,7 +2132,7 @@ function renderMarketSummary() {
 
   if (stations.length === 0) {
     elements.marketSummary.innerHTML = `
-      <h2>📊 相場サマリー（成約済み）</h2>
+      <h2>該当物件一覧</h2>
       <p class="muted">駅を選択すると、その駅の成約相場が表示されます。</p>
     `;
     return;
@@ -2171,7 +2171,7 @@ function renderMarketSummary() {
   const threshold = formatDecimal(getBargainThresholdPct(), "%");
 
   elements.marketSummary.innerHTML = `
-    <h2>📊 相場サマリー（成約済み）</h2>
+    <h2>該当物件一覧</h2>
     <div class="market-grid">${cards}</div>
     <p class="muted">選択駅の加重平均 ${selectedAvg} / 割安判定: 相場比 ${threshold} 以上お得</p>
   `;
@@ -2339,7 +2339,7 @@ function renderProperties() {
       : `<span class="link-muted">-</span>`;
 
     const referenceText = property.reference_price
-      ? `<div class="row-sub">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}（${property.reference_basis || ""}）</div>`
+      ? `<div class="row-sub">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}</div>`
       : "";
 
     row.innerHTML = `
@@ -2348,7 +2348,6 @@ function renderProperties() {
       <div class="${getCellClass("property_name")}">
         <div class="name-line">
           <strong class="property-name">${property.property_name || "名称不明"}</strong>
-          ${bargainBadge}
         </div>
         <div class="row-sub">${property.address || ""}</div>
         ${referenceText}
@@ -2357,7 +2356,12 @@ function renderProperties() {
       <div class="${getCellClass("station")}">${canonicalizeStationName(property.station) || "-"}</div>
       <div class="${getCellClass("walk_minutes")}">${property.walk_minutes ?? "-"}分</div>
       <div class="${getCellClass("price_jpy")}">${formatPrice(property.price_jpy)}</div>
-      <div class="${getCellClass("unit_price_m2")}">${formatDecimal(property.unit_price_m2, " 万円/㎡")}</div>
+      <div class="${getCellClass("unit_price_m2")}">
+        <div class="unit-price-cell">
+          <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
+          ${bargainBadge}
+        </div>
+      </div>
       <div class="${getCellClass("area_m2")}">${formatDecimal(property.area_m2, " ㎡")}</div>
       <div class="${getCellClass("floor")}">${getDisplayFloor(property)}</div>
       <div class="${getCellClass("layout")}">${formatLayoutLabel(property.layout)}</div>
