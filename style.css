@@ -18,7 +18,7 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
   --sidebar-width: 280px;
-  --list-columns: 36px 56px minmax(150px, 220px) 72px 56px 44px 84px 96px 56px 40px 56px 40px 48px 84px 52px;
+  --list-columns: 36px 64px minmax(170px, 1.5fr) 80px minmax(56px, 0.7fr) 48px minmax(80px, 0.85fr) minmax(96px, 0.95fr) 60px 48px 56px 48px 52px minmax(80px, 0.75fr) 56px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
 }
 
@@ -981,9 +981,10 @@ body {
 .property-row {
   display: grid;
   grid-template-columns: var(--list-columns);
-  gap: 0.45rem;
+  gap: 0.55rem;
   align-items: center;
-  padding: 0.75rem 0.85rem;
+  padding: 0.7rem 1rem;
+  width: 100%;
 }
 
 .property-list-header {
@@ -1354,7 +1355,7 @@ body {
 
 @media (max-width: 1200px) {
   :root {
-    --list-columns: 36px 56px minmax(140px, 200px) 72px 56px 44px 80px 92px 52px 40px 52px 40px 44px 80px 48px;
+    --list-columns: 36px 60px minmax(150px, 1.4fr) 76px minmax(52px, 0.65fr) 44px minmax(76px, 0.8fr) minmax(90px, 0.9fr) 56px 44px 52px 44px 48px minmax(76px, 0.7fr) 52px;
   }
 
   .property-table {
