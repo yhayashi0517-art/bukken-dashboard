@@ -1688,16 +1688,12 @@ function getCellProps(columnId, cardSection = "primary") {
   return `class="${column.className} ${getAlignClass(column)}" data-label="${escapeHtml(column.label)}" data-card-section="${cardSection}"`;
 }
 
-/** スマホカードの要約行テキストを作る */
+/** スマホカードの要約行テキストを作る（1行に収まる短さ） */
 function buildMobileCardSummary(property) {
   const parts = [
     formatLayoutLabel(property.layout),
     formatDecimal(property.area_m2, "㎡"),
     property.age_years != null && property.age_years !== "" ? `築${property.age_years}年` : null,
-    (() => {
-      const floor = getDisplayFloor(property);
-      return floor && floor !== "-" ? floor : null;
-    })(),
   ].filter(Boolean);
   return parts.join(" · ");
 }
@@ -2386,11 +2382,13 @@ function renderProperties() {
       <div ${getCellProps("display_state", "primary")}><span class="status-badge ${statusClass}">${displayState}</span></div>
       <div ${getCellProps("station", "primary")}">${stationLabel}</div>
       <div ${getCellProps("walk_minutes", "primary")}">${walkLabel}</div>
-      <div ${getCellProps("price_jpy", "primary")}">${formatPrice(property.price_jpy)}</div>
-      <div ${getCellProps("unit_price_m2", "primary")}>
-        <div class="unit-price-cell">
-          <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
-          ${bargainBadge}
+      <div class="card-price-row">
+        <div ${getCellProps("price_jpy", "primary")}">${formatPrice(property.price_jpy)}</div>
+        <div ${getCellProps("unit_price_m2", "primary")}>
+          <div class="unit-price-cell">
+            <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
+            ${bargainBadge}
+          </div>
         </div>
       </div>
       <div ${getCellProps("area_m2", "details")}">${formatDecimal(property.area_m2, " ㎡")}</div>
@@ -2399,12 +2397,14 @@ function renderProperties() {
       <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
       <div ${getCellProps("age_years", "details")}">${property.age_years ?? "-"}年</div>
       <div ${getCellProps("transaction_period", "details")}">${getDisplayTransactionPeriod(property)}</div>
-      <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
-      <button type="button" class="card-expand-btn" aria-expanded="false">
-        <span class="card-expand-text">詳細を見る</span>
-      </button>
-      <div ${getCellProps("link", "primary")}>
-        ${linkCell}
+      <div class="card-footer-row">
+        <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
+        <button type="button" class="card-expand-btn" aria-expanded="false">
+          <span class="card-expand-text">詳細を見る</span>
+        </button>
+        <div ${getCellProps("link", "primary")}>
+          ${linkCell}
+        </div>
       </div>
     `;
 

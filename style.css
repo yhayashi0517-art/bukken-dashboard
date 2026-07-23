@@ -1598,84 +1598,95 @@ body {
     display: none !important;
   }
 
-  .property-row.is-expanded > .card-summary {
+  .property-row.is-expanded > .card-footer-row > .card-summary {
     display: none;
   }
 
-  .property-row:not(.is-expanded) > .col-price,
-  .property-row:not(.is-expanded) > .col-unit,
-  .property-row:not(.is-expanded) > .col-link,
-  .property-row:not(.is-expanded) > .card-summary,
-  .property-row:not(.is-expanded) > .card-expand-btn {
+  .property-row:not(.is-expanded) > .card-price-row .col-price::before,
+  .property-row:not(.is-expanded) > .card-price-row .col-unit::before,
+  .property-row:not(.is-expanded) > .card-footer-row .col-link::before {
+    display: none;
+  }
+
+  /* 間取り図がないときは列を畳む */
+  .property-row > .col-plan:has(.no-plan) {
+    display: none;
+  }
+
+  .property-row:has(.col-plan .no-plan) {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+  }
+
+  .property-row:has(.col-plan .no-plan) > .col-name {
+    grid-column: 2 / -1;
+  }
+
+  /* 価格行（全幅フレックスで中央の大きな空きをなくす） */
+  .property-row > .card-price-row {
+    grid-column: 1 / -1;
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-    border: none;
-  }
-
-  .property-row:not(.is-expanded) > .col-price::before,
-  .property-row:not(.is-expanded) > .col-unit::before,
-  .property-row:not(.is-expanded) > .col-link::before {
-    display: none;
-  }
-
-  /* 価格行 */
-  .property-row:not(.is-expanded) > .col-price {
-    grid-column: 1 / 3;
-    grid-row: 2;
-    margin-top: 0.45rem;
-    padding-top: 0.45rem;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-top: 0.4rem;
+    padding: 0.4rem 0.05rem 0;
     border-top: 1px solid var(--border-light);
+  }
+
+  .property-row > .card-price-row > .col-price {
+    flex: 0 0 auto;
     font-weight: 700;
     font-size: 1.05rem;
     line-height: 1.15;
+    text-align: left;
   }
 
-  .property-row:not(.is-expanded) > .col-unit {
-    grid-column: 3 / -1;
-    grid-row: 2;
-    margin-top: 0.45rem;
-    padding-top: 0.45rem;
-    border-top: 1px solid var(--border-light);
+  .property-row > .card-price-row > .col-unit {
+    flex: 0 1 auto;
+    display: flex;
     justify-content: flex-end;
-    gap: 0.3rem;
     font-size: 0.78rem;
-    color: var(--text);
   }
 
-  .property-row:not(.is-expanded) > .col-unit .unit-price-cell {
+  .property-row > .card-price-row > .col-unit .unit-price-cell {
     flex-direction: row;
     align-items: center;
     gap: 0.3rem;
   }
 
-  .property-row:not(.is-expanded) > .col-unit .badge {
+  .property-row > .card-price-row > .col-unit .badge {
     font-size: 0.62rem;
     padding: 0.08rem 0.32rem;
   }
 
-  /* フッター行: 要約 + 詳細ボタン + SUUMO */
-  .property-row:not(.is-expanded) > .card-summary {
-    grid-column: 1 / 3;
-    grid-row: 3;
-    margin-top: 0.4rem;
-    padding-top: 0.4rem;
+  /* フッター行 */
+  .property-row > .card-footer-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    padding: 0.35rem 0.05rem 0;
     border-top: 1px solid var(--border-light);
+    min-width: 0;
+  }
+
+  .property-row > .card-footer-row > .card-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
     color: var(--text-secondary);
     font-size: 0.74rem;
     line-height: 1.25;
-    align-self: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .property-row:not(.is-expanded) > .card-expand-btn {
-    grid-column: 3;
-    grid-row: 3;
+  .property-row > .card-footer-row > .card-expand-btn {
+    flex: 0 0 auto;
     width: auto;
-    justify-self: end;
-    align-self: center;
-    margin-top: 0.4rem;
+    margin: 0;
     padding: 0.28rem 0.55rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
@@ -1686,80 +1697,78 @@ body {
     font-weight: 600;
     line-height: 1.2;
     white-space: nowrap;
+    cursor: pointer;
   }
 
-  .property-row:not(.is-expanded) > .col-link {
-    grid-column: 4;
-    grid-row: 3;
+  .property-row > .card-footer-row > .col-link {
+    flex: 0 0 auto;
+    display: flex;
     justify-content: flex-end;
-    align-self: center;
-    margin-top: 0.4rem;
-    padding-top: 0;
     font-size: 0.78rem;
     font-weight: 600;
   }
 
-  /* 開いたとき */
-  .property-row.is-expanded > .col-price,
-  .property-row.is-expanded > .col-unit,
-  .property-row.is-expanded > .col-link,
+  /* 開いたとき: 項目ラベルと値を近づけて表示 */
+  .property-row.is-expanded > .card-price-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
+    padding-top: 0.2rem;
+  }
+
+  .property-row.is-expanded > .card-price-row > .col-price,
+  .property-row.is-expanded > .card-price-row > .col-unit,
+  .property-row.is-expanded > .card-footer-row > .col-link,
   .property-row.is-expanded > [data-card-section="details"] {
-    grid-column: 1 / -1;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 5.5em minmax(0, 1fr);
     align-items: center;
-    gap: 0.75rem;
+    column-gap: 0.65rem;
     width: 100%;
-    margin-top: 0;
-    padding: 0.35rem 0 0;
+    margin: 0;
+    padding: 0.28rem 0 0;
     border-top: 1px solid var(--border-light);
-    text-align: right;
+    text-align: left;
     font-size: 0.84rem;
   }
 
-  .property-row.is-expanded > .col-price::before,
-  .property-row.is-expanded > .col-unit::before,
-  .property-row.is-expanded > .col-link::before,
+  .property-row.is-expanded > .card-price-row > .col-price::before,
+  .property-row.is-expanded > .card-price-row > .col-unit::before,
+  .property-row.is-expanded > .card-footer-row > .col-link::before,
   .property-row.is-expanded > [data-card-section="details"]::before {
     content: attr(data-label);
     color: var(--text-secondary);
     font-size: 0.72rem;
     font-weight: 600;
-    text-align: left;
-    flex: 0 0 auto;
-    display: inline;
+    display: block;
   }
 
-  .property-row.is-expanded > .col-price {
-    margin-top: 0.45rem;
+  .property-row.is-expanded > .card-price-row > .col-price {
+    border-top: none;
+    padding-top: 0.15rem;
     font-weight: 700;
   }
 
-  .property-row.is-expanded > .col-unit .unit-price-cell {
-    align-items: flex-end;
+  .property-row.is-expanded > .card-price-row > .col-unit .unit-price-cell {
+    align-items: flex-start;
   }
 
-  .property-row.is-expanded > .card-expand-btn {
-    grid-column: 1 / -1;
+  .property-row.is-expanded > .card-footer-row {
+    flex-wrap: wrap;
+  }
+
+  .property-row.is-expanded > .card-footer-row > .card-expand-btn {
+    flex: 1 1 100%;
     width: 100%;
-    margin-top: 0.35rem;
+    margin-top: 0.25rem;
     padding: 0.4rem 0.55rem;
-    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-subtle);
-    color: var(--text);
-    font: inherit;
-    font-size: 0.78rem;
-    font-weight: 600;
+    text-align: center;
   }
 
-  .property-row > .card-summary {
-    margin: 0;
-    color: var(--text-secondary);
-  }
-
-  .property-row > .card-expand-btn {
-    cursor: pointer;
+  .property-row.is-expanded > .card-footer-row > .col-link {
+    order: -1;
   }
 
   .pagination {
@@ -1782,6 +1791,12 @@ body {
   .card-expand-btn,
   .card-inline-meta {
     display: none !important;
+  }
+
+  /* PCテーブルではラッパーを透過させて列グリッドに参加させる */
+  .card-price-row,
+  .card-footer-row {
+    display: contents;
   }
 }
 
