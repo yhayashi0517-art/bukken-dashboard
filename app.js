@@ -180,6 +180,8 @@ const elements = {
   favoritesCount: document.getElementById("favorites-count"),
   savedSearchName: document.getElementById("saved-search-name"),
   saveSearchBtn: document.getElementById("save-search-btn"),
+  saveLineNotify: document.getElementById("save-line-notify"),
+  exportLineNotifyBtn: document.getElementById("export-line-notify-btn"),
   savedSearchList: document.getElementById("saved-search-list"),
   archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
   archivedFavoritesList: document.getElementById("archived-favorites-list"),
@@ -386,7 +388,14 @@ function updateFavoritesCount() {
 /** 保存済み検索条件を読み込む */
 function loadSavedSearches() {
   const stored = readStorageJson(SAVED_SEARCHES_STORAGE_KEY, []);
-  savedSearches = Array.isArray(stored) ? stored.filter((item) => item && item.state) : [];
+  savedSearches = Array.isArray(stored)
+    ? stored
+        .filter((item) => item && item.state)
+        .map((item) => ({
+          ...item,
+          lineNotify: Boolean(item.lineNotify),
+        }))
+    : [];
 }
 
 /** 保存済み検索条件を保存する */
@@ -490,20 +499,67 @@ function renderSavedSearches() {
     .map((item) => {
       const name = escapeHtml(item.name || "名称なし");
       const summary = escapeHtml(summarizeFilterState(item.state));
+      const lineActive = Boolean(item.lineNotify);
       return `
         <article class="saved-search-item" data-search-id="${escapeHtml(item.id)}">
           <div class="saved-search-item-head">
             <strong class="saved-search-item-name">${name}</strong>
+            ${lineActive ? '<span class="saved-search-line-badge">LINE</span>' : ""}
           </div>
           <p class="saved-search-item-summary">${summary}</p>
           <div class="saved-search-item-actions">
             <button type="button" class="page-btn" data-search-action="apply">適用</button>
+            <button type="button" class="page-btn${lineActive ? " is-active" : ""}" data-search-action="line">${lineActive ? "LINE ON" : "LINE OFF"}</button>
             <button type="button" class="page-btn is-danger" data-search-action="delete">削除</button>
           </div>
         </article>
       `;
     })
     .join("");
+}
+
+/** LINE 通知対象の切り替え */
+function toggleLineNotify(searchId) {
+  const saved = savedSearches.find((item) => item.id === searchId);
+  if (!saved) return;
+  saved.lineNotify = !saved.lineNotify;
+  persistSavedSearches();
+  renderSavedSearches();
+}
+
+/** LINE 通知設定 JSON をエクスポートする */
+function exportLineNotificationConfig() {
+  const rules = savedSearches
+    .filter((item) => item.lineNotify)
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      enabled: true,
+      state: item.state,
+    }));
+
+  if (rules.length === 0) {
+    alert(
+      "LINE通知対象の検索条件がありません。\n"
+        + "各条件の「LINE OFF」をクリックして ON にするか、保存時にチェックを入れてください。"
+    );
+    return;
+  }
+
+  const payload = {
+    enabled: true,
+    max_messages_per_run: 10,
+    rules,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = "notification_config.json";
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 /** 現在の検索条件を保存する */
@@ -521,6 +577,7 @@ function saveCurrentSearch() {
     id: `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name,
     createdAt: new Date().toISOString(),
+    lineNotify: Boolean(elements.saveLineNotify?.checked),
     state,
   });
 
@@ -2370,6 +2427,9 @@ function setupEventListeners() {
   if (elements.saveSearchBtn) {
     elements.saveSearchBtn.addEventListener("click", saveCurrentSearch);
   }
+  if (elements.exportLineNotifyBtn) {
+    elements.exportLineNotifyBtn.addEventListener("click", exportLineNotificationConfig);
+  }
   if (elements.savedSearchName) {
     elements.savedSearchName.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -2387,6 +2447,10 @@ function setupEventListeners() {
       const searchId = item.dataset.searchId;
       if (actionButton.dataset.searchAction === "apply") {
         applySavedSearch(searchId);
+        return;
+      }
+      if (actionButton.dataset.searchAction === "line") {
+        toggleLineNotify(searchId);
         return;
       }
       if (actionButton.dataset.searchAction === "delete") {

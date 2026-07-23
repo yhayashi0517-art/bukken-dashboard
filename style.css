@@ -138,6 +138,42 @@ body {
   width: 100%;
 }
 
+.saved-search-line-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.saved-search-help {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.saved-search-help code {
+  font-size: 0.7rem;
+}
+
+.saved-search-line-badge {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: #06c755;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.saved-search-item-actions .page-btn.is-active {
+  color: #067647;
+  border-color: #abefc6;
+  background: #ecfdf3;
+}
+
 .saved-search-list {
   display: flex;
   flex-direction: column;

@@ -85,7 +85,16 @@
               maxlength="40"
             >
             <button id="save-search-btn" class="page-btn" type="button">現在の条件を保存</button>
+            <label class="saved-search-line-option">
+              <input type="checkbox" id="save-line-notify">
+              保存時に LINE 通知対象にする
+            </label>
+            <button id="export-line-notify-btn" class="page-btn" type="button">LINE通知設定をエクスポート</button>
           </div>
+          <p class="saved-search-help">
+            エクスポートした <code>notification_config.json</code> を
+            <code>ai_coaching</code> フォルダに置くと、夜間更新後に LINE へ新着通知されます。
+          </p>
           <div id="saved-search-list" class="saved-search-list" aria-live="polite"></div>
         </div>
 
@@ -125,6 +134,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=38"></script>
+  <script src="app.js?v=39"></script>
 </body>
 </html>
