@@ -18,7 +18,7 @@
   --radius-sm: 8px;
   --radius-pill: 999px;
   --sidebar-width: 280px;
-  --list-columns: 36px 72px minmax(140px, 1.5fr) 76px 60px 48px 88px 100px 60px 44px 60px 44px 52px 88px 56px;
+  --list-columns: 36px 56px minmax(150px, 220px) 72px 56px 44px 84px 96px 56px 40px 56px 40px 48px 84px 52px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
 }
 
@@ -1120,20 +1120,21 @@ body {
 .name-line {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   flex-wrap: wrap;
 }
 
 .property-name {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.25;
   color: var(--text);
 }
 
 .row-sub {
-  margin-top: 0.15rem;
-  font-size: 0.75rem;
+  margin-top: 0.05rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
   color: var(--text-secondary);
 }
 
@@ -1353,7 +1354,7 @@ body {
 
 @media (max-width: 1200px) {
   :root {
-    --list-columns: 36px 72px minmax(140px, 1.4fr) 76px 60px 48px 84px 96px 56px 44px 56px 44px 48px 84px 52px;
+    --list-columns: 36px 56px minmax(140px, 200px) 72px 56px 44px 80px 92px 52px 40px 52px 40px 44px 80px 48px;
   }
 
   .property-table {
