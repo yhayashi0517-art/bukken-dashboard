@@ -1682,10 +1682,24 @@ function getCellClass(columnId) {
 }
 
 /** 行セル用の属性文字列を返す（スマホカード表示用の data-label 付き） */
-function getCellProps(columnId) {
+function getCellProps(columnId, cardSection = "primary") {
   const column = TABLE_COLUMNS.find((item) => item.id === columnId);
   if (!column) return 'class=""';
-  return `class="${column.className} ${getAlignClass(column)}" data-label="${escapeHtml(column.label)}"`;
+  return `class="${column.className} ${getAlignClass(column)}" data-label="${escapeHtml(column.label)}" data-card-section="${cardSection}"`;
+}
+
+/** スマホカードの要約行テキストを作る */
+function buildMobileCardSummary(property) {
+  const parts = [
+    formatLayoutLabel(property.layout),
+    formatDecimal(property.area_m2, "㎡"),
+    property.age_years != null && property.age_years !== "" ? `築${property.age_years}年` : null,
+    (() => {
+      const floor = getDisplayFloor(property);
+      return floor && floor !== "-" ? floor : null;
+    })(),
+  ].filter(Boolean);
+  return parts.join(" · ");
 }
 
 /** テーブルヘッダーを描画する */
@@ -2348,38 +2362,43 @@ function renderProperties() {
       : `<span class="link-muted">-</span>`;
 
     const referenceText = property.reference_price
-      ? `<div class="row-sub">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}</div>`
+      ? `<div class="row-sub row-sub-reference">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}</div>`
       : "";
+    const cardSummary = buildMobileCardSummary(property);
 
     row.innerHTML = `
       ${renderFavoriteCell(property)}
       ${renderFloorPlanCell(property)}
-      <div ${getCellProps("property_name")}>
+      <div ${getCellProps("property_name", "primary")}>
         <div class="name-line">
           <strong class="property-name">${property.property_name || "名称不明"}</strong>
         </div>
         <div class="row-sub">${property.address || ""}</div>
         ${referenceText}
       </div>
-      <div ${getCellProps("display_state")}><span class="status-badge ${statusClass}">${displayState}</span></div>
-      <div ${getCellProps("station")}">${canonicalizeStationName(property.station) || "-"}</div>
-      <div ${getCellProps("walk_minutes")}">${property.walk_minutes ?? "-"}分</div>
-      <div ${getCellProps("price_jpy")}">${formatPrice(property.price_jpy)}</div>
-      <div ${getCellProps("unit_price_m2")}>
+      <div ${getCellProps("display_state", "primary")}><span class="status-badge ${statusClass}">${displayState}</span></div>
+      <div ${getCellProps("station", "primary")}">${canonicalizeStationName(property.station) || "-"}</div>
+      <div ${getCellProps("walk_minutes", "primary")}">${property.walk_minutes ?? "-"}分</div>
+      <div ${getCellProps("price_jpy", "primary")}">${formatPrice(property.price_jpy)}</div>
+      <div ${getCellProps("unit_price_m2", "primary")}>
         <div class="unit-price-cell">
           <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
           ${bargainBadge}
         </div>
       </div>
-      <div ${getCellProps("area_m2")}">${formatDecimal(property.area_m2, " ㎡")}</div>
-      <div ${getCellProps("floor")}">${getDisplayFloor(property)}</div>
-      <div ${getCellProps("layout")}">${formatLayoutLabel(property.layout)}</div>
-      <div ${getCellProps("direction")}">${getDisplayDirection(property)}</div>
-      <div ${getCellProps("age_years")}">${property.age_years ?? "-"}年</div>
-      <div ${getCellProps("transaction_period")}">${getDisplayTransactionPeriod(property)}</div>
-      <div ${getCellProps("link")}>
+      <div ${getCellProps("area_m2", "details")}">${formatDecimal(property.area_m2, " ㎡")}</div>
+      <div ${getCellProps("floor", "details")}">${getDisplayFloor(property)}</div>
+      <div ${getCellProps("layout", "details")}">${formatLayoutLabel(property.layout)}</div>
+      <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
+      <div ${getCellProps("age_years", "details")}">${property.age_years ?? "-"}年</div>
+      <div ${getCellProps("transaction_period", "details")}">${getDisplayTransactionPeriod(property)}</div>
+      <div ${getCellProps("link", "primary")}>
         ${linkCell}
       </div>
+      <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
+      <button type="button" class="card-expand-btn" aria-expanded="false">
+        <span class="card-expand-text">詳細を見る</span>
+      </button>
     `;
 
     elements.propertyList.appendChild(row);
@@ -2786,6 +2805,19 @@ function setupEventListeners() {
   }
   if (elements.propertyList) {
     elements.propertyList.addEventListener("click", (event) => {
+      const expandButton = event.target.closest(".card-expand-btn");
+      if (expandButton) {
+        const card = expandButton.closest(".property-row");
+        if (!card) return;
+        const isExpanded = card.classList.toggle("is-expanded");
+        expandButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+        const label = expandButton.querySelector(".card-expand-text");
+        if (label) {
+          label.textContent = isExpanded ? "詳細を閉じる" : "詳細を見る";
+        }
+        return;
+      }
+
       const favoriteButton = event.target.closest(".favorite-btn");
       if (!favoriteButton) return;
       const propertyId = favoriteButton.dataset.propertyId;

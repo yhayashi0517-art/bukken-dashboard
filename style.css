@@ -1497,16 +1497,16 @@ body {
   }
 
   .property-list {
-    gap: 0.7rem;
+    gap: 0.65rem;
   }
 
   .property-row {
     display: grid;
-    grid-template-columns: 36px 72px 1fr;
-    gap: 0.45rem 0.65rem;
+    grid-template-columns: 32px 64px 1fr;
+    gap: 0.35rem 0.55rem;
     align-items: start;
     margin: 0;
-    padding: 0.85rem;
+    padding: 0.7rem;
     border: 1px solid var(--border-light);
     border-radius: var(--radius);
     background: var(--card);
@@ -1532,21 +1532,129 @@ body {
   }
 
   .property-row > .col-plan .floor-plan-thumb {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
   }
 
+  .property-row > .col-name .property-name {
+    font-size: 0.92rem;
+    line-height: 1.3;
+  }
+
+  .property-row > .col-name .row-sub {
+    font-size: 0.72rem;
+  }
+
+  /* 閉じた状態では詳細項目と相場行を隠す */
+  .property-row:not(.is-expanded) > [data-card-section="details"],
+  .property-row:not(.is-expanded) .row-sub-reference {
+    display: none !important;
+  }
+
+  .property-row.is-expanded > .card-summary {
+    display: none;
+  }
+
+  /* 主要項目はコンパクトな2列メタ情報 */
   .property-row > .col-state,
   .property-row > .col-station,
   .property-row > .col-walk,
   .property-row > .col-price,
-  .property-row > .col-unit,
-  .property-row > .col-area,
-  .property-row > .col-floor,
-  .property-row > .col-layout,
-  .property-row > .col-direction,
-  .property-row > .col-age,
-  .property-row > .col-period,
+  .property-row > .col-unit {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    width: auto;
+    padding: 0.15rem 0 0;
+    border-top: none;
+    text-align: left;
+    font-size: 0.84rem;
+  }
+
+  .property-row > .col-state {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.45rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .property-row > .col-station,
+  .property-row > .col-walk {
+    grid-column: span 1;
+  }
+
+  .property-row > .col-station {
+    grid-column: 1 / 3;
+  }
+
+  .property-row > .col-walk {
+    grid-column: 3;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .property-row > .col-price,
+  .property-row > .col-unit {
+    grid-column: span 1;
+    padding-top: 0.2rem;
+  }
+
+  .property-row > .col-price {
+    grid-column: 1 / 3;
+    font-weight: 700;
+    font-size: 0.98rem;
+  }
+
+  .property-row > .col-unit {
+    grid-column: 3;
+    align-items: flex-end;
+  }
+
+  .property-row > .col-state::before,
+  .property-row > .col-station::before,
+  .property-row > .col-walk::before,
+  .property-row > .col-price::before,
+  .property-row > .col-unit::before {
+    content: attr(data-label);
+    color: var(--text-tertiary);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .property-row > .col-unit .unit-price-cell {
+    align-items: flex-end;
+  }
+
+  .property-row > .card-summary {
+    grid-column: 1 / -1;
+    margin: 0.15rem 0 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .property-row > .card-expand-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0.15rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
   .property-row > .col-link {
     grid-column: 1 / -1;
     display: flex;
@@ -1554,23 +1662,12 @@ body {
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    padding: 0.4rem 0 0;
+    padding: 0.35rem 0 0;
     border-top: 1px solid var(--border-light);
     text-align: right;
     font-size: 0.88rem;
   }
 
-  .property-row > .col-state::before,
-  .property-row > .col-station::before,
-  .property-row > .col-walk::before,
-  .property-row > .col-price::before,
-  .property-row > .col-unit::before,
-  .property-row > .col-area::before,
-  .property-row > .col-floor::before,
-  .property-row > .col-layout::before,
-  .property-row > .col-direction::before,
-  .property-row > .col-age::before,
-  .property-row > .col-period::before,
   .property-row > .col-link::before {
     content: attr(data-label);
     color: var(--text-secondary);
@@ -1580,8 +1677,27 @@ body {
     flex: 0 0 auto;
   }
 
-  .property-row > .col-unit .unit-price-cell {
-    align-items: flex-end;
+  /* 開いたときだけ詳細行をラベル付きで表示 */
+  .property-row.is-expanded > [data-card-section="details"] {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.35rem 0 0;
+    border-top: 1px solid var(--border-light);
+    text-align: right;
+    font-size: 0.86rem;
+  }
+
+  .property-row.is-expanded > [data-card-section="details"]::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: left;
+    flex: 0 0 auto;
   }
 
   .property-row > .align-center.col-state,
@@ -1590,12 +1706,17 @@ body {
     justify-content: space-between;
   }
 
+  .property-row > .align-center.col-state {
+    justify-content: flex-start;
+  }
+
   .pagination {
     flex-wrap: wrap;
     justify-content: center;
   }
 }
 
+/* PCではカード用UIを出さない */
 @media (min-width: 861px) {
   .mobile-filter-toggle {
     display: none;
@@ -1603,6 +1724,11 @@ body {
 
   .sidebar.is-open {
     display: block;
+  }
+
+  .card-summary,
+  .card-expand-btn {
+    display: none !important;
   }
 }
 
