@@ -2805,33 +2805,41 @@ function setupEventListeners() {
   }
   if (elements.propertyList) {
     elements.propertyList.addEventListener("click", (event) => {
-      const expandButton = event.target.closest(".card-expand-btn");
+      const favoriteButton = event.target.closest(".favorite-btn");
+      if (favoriteButton) {
+        const propertyId = favoriteButton.dataset.propertyId;
+        const property = propertyById.get(propertyId);
+        if (!property) return;
+
+        toggleFavoriteProperty(property);
+        const isActive = isFavoriteId(propertyId);
+        favoriteButton.classList.toggle("is-active", isActive);
+        favoriteButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+        favoriteButton.setAttribute("aria-label", isActive ? "お気に入り解除" : "お気に入り登録");
+
+        if (filterFavoritesOnly) {
+          refreshPropertyList();
+        }
+        return;
+      }
+
+      // リンク操作はカード開閉と分離する
+      if (event.target.closest("a")) return;
+
+      const card = event.target.closest(".property-row");
+      if (!card || !elements.propertyList.contains(card)) return;
+
+      // スマホのカード表示時のみ、カード全体タップで詳細を開閉
+      if (!window.matchMedia("(max-width: 860px)").matches) return;
+
+      const isExpanded = card.classList.toggle("is-expanded");
+      const expandButton = card.querySelector(".card-expand-btn");
       if (expandButton) {
-        const card = expandButton.closest(".property-row");
-        if (!card) return;
-        const isExpanded = card.classList.toggle("is-expanded");
         expandButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
         const label = expandButton.querySelector(".card-expand-text");
         if (label) {
           label.textContent = isExpanded ? "詳細を閉じる" : "詳細を見る";
         }
-        return;
-      }
-
-      const favoriteButton = event.target.closest(".favorite-btn");
-      if (!favoriteButton) return;
-      const propertyId = favoriteButton.dataset.propertyId;
-      const property = propertyById.get(propertyId);
-      if (!property) return;
-
-      toggleFavoriteProperty(property);
-      const isActive = isFavoriteId(propertyId);
-      favoriteButton.classList.toggle("is-active", isActive);
-      favoriteButton.setAttribute("aria-pressed", isActive ? "true" : "false");
-      favoriteButton.setAttribute("aria-label", isActive ? "お気に入り解除" : "お気に入り登録");
-
-      if (filterFavoritesOnly) {
-        refreshPropertyList();
       }
     });
   }

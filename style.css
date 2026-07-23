@@ -1511,6 +1511,7 @@ body {
     border-radius: var(--radius-sm);
     background: var(--card);
     box-shadow: none;
+    cursor: pointer;
   }
 
   .property-row > .col-favorite {
