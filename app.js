@@ -2361,6 +2361,8 @@ function renderProperties() {
       ? `<a href="${linkHref}" target="_blank" rel="noopener noreferrer" class="link">${linkLabel}</a>`
       : `<span class="link-muted">-</span>`;
 
+    const stationLabel = canonicalizeStationName(property.station) || "-";
+    const walkLabel = `${property.walk_minutes ?? "-"}分`;
     const referenceText = property.reference_price
       ? `<div class="row-sub row-sub-reference">相場 ${formatDecimal(property.reference_price, " 万円/㎡")}</div>`
       : "";
@@ -2374,11 +2376,16 @@ function renderProperties() {
           <strong class="property-name">${property.property_name || "名称不明"}</strong>
         </div>
         <div class="row-sub">${property.address || ""}</div>
+        <div class="card-inline-meta">
+          <span class="status-badge ${statusClass}">${displayState}</span>
+          <span class="card-inline-station">${stationLabel}</span>
+          <span class="card-inline-walk">${walkLabel}</span>
+        </div>
         ${referenceText}
       </div>
       <div ${getCellProps("display_state", "primary")}><span class="status-badge ${statusClass}">${displayState}</span></div>
-      <div ${getCellProps("station", "primary")}">${canonicalizeStationName(property.station) || "-"}</div>
-      <div ${getCellProps("walk_minutes", "primary")}">${property.walk_minutes ?? "-"}分</div>
+      <div ${getCellProps("station", "primary")}">${stationLabel}</div>
+      <div ${getCellProps("walk_minutes", "primary")}">${walkLabel}</div>
       <div ${getCellProps("price_jpy", "primary")}">${formatPrice(property.price_jpy)}</div>
       <div ${getCellProps("unit_price_m2", "primary")}>
         <div class="unit-price-cell">
@@ -2392,13 +2399,13 @@ function renderProperties() {
       <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
       <div ${getCellProps("age_years", "details")}">${property.age_years ?? "-"}年</div>
       <div ${getCellProps("transaction_period", "details")}">${getDisplayTransactionPeriod(property)}</div>
-      <div ${getCellProps("link", "primary")}>
-        ${linkCell}
-      </div>
       <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
       <button type="button" class="card-expand-btn" aria-expanded="false">
         <span class="card-expand-text">詳細を見る</span>
       </button>
+      <div ${getCellProps("link", "primary")}>
+        ${linkCell}
+      </div>
     `;
 
     elements.propertyList.appendChild(row);
