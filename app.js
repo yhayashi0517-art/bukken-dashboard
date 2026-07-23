@@ -2836,8 +2836,8 @@ function setupEventListeners() {
       const card = event.target.closest(".property-row");
       if (!card || !elements.propertyList.contains(card)) return;
 
-      // スマホのカード表示時のみ、カード全体タップで詳細を開閉
-      if (!window.matchMedia("(max-width: 860px)").matches) return;
+      // 狭い画面のカード表示時のみ、カード全体タップで詳細を開閉
+      if (!window.matchMedia("(max-width: 1100px)").matches) return;
 
       const isExpanded = card.classList.toggle("is-expanded");
       const expandButton = card.querySelector(".card-expand-btn");
