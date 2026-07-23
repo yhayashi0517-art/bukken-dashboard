@@ -23,6 +23,7 @@ const DEFAULT_GITHUB_SYNC = {
   token: "",
 };
 const LOCAL_SYNC_URL = "http://127.0.0.1:8765/save-searches";
+const LOCAL_SYNC_FORM_URL = "http://127.0.0.1:8765/save-searches-form";
 const LOCAL_SYNC_HEALTH_URL = "http://127.0.0.1:8765/health";
 
 let allProperties = [];
@@ -475,18 +476,64 @@ async function checkLocalSyncServer() {
   return localSyncAvailable;
 }
 
-/** ローカルサーバー経由で共有保存する */
-async function publishSharedSavedSearchesViaLocal(payload) {
-  const response = await fetch(LOCAL_SYNC_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.ok) {
-    throw new Error(data.error || `ローカル保存に失敗しました (${response.status})`);
+/** ローカルサーバーへフォーム送信する（HTTPSのGitHub Pagesからでも動作） */
+function publishSharedSavedSearchesViaLocalForm(payload) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = LOCAL_SYNC_FORM_URL;
+  form.target = "_blank";
+  form.rel = "noopener";
+
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "payload";
+  input.value = JSON.stringify(payload);
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+  return {
+    message: "PC保存サーバーへ送信しました。開いたページで結果を確認してください。",
+  };
+}
+
+/** 検索条件を GitHub に保存して両端末で共有する */
+async function publishSharedSavedSearches() {
+  const button = elements.exportSharedSearchesBtn;
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "保存中...";
   }
-  return data;
+  updateSharedSearchesStatus("共有保存中...");
+
+  try {
+    const payload = buildSharedSavedSearchesPayload();
+    // GitHub Pages(HTTPS) からは localhost(HTTP) への fetch が遮断されるため、
+    // フォーム送信で PC 保存サーバーへ送る。
+    const localResult = publishSharedSavedSearchesViaLocalForm(payload);
+
+    savedSearches = normalizeSavedSearches(payload.searches);
+    sharedSearchesUpdatedAt = payload.updated_at;
+    sharedSearchesLoaded = true;
+    persistSavedSearches();
+    renderSavedSearches();
+    updateSharedSearchesStatus(localResult.message);
+    alert(
+      "PCの保存サーバーへ送信しました。\n"
+        + "新しく開いたページに「成功」と出ていれば完了です。\n"
+        + "接続エラーの場合は、このPCで共有保存サーバーを起動してください。"
+    );
+  } catch (error) {
+    updateSharedSearchesStatus("保存に失敗しました");
+    alert(`保存に失敗しました。\n${error.message || error}`);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel || "検索条件をスマホ共有用に保存";
+    }
+  }
 }
 
 /** GitHub 連携設定を読み込む */
@@ -568,85 +615,6 @@ async function fetchGitHubFileSha(config) {
   }
   const data = await response.json();
   return data.sha || null;
-}
-
-/** 検索条件を GitHub に保存して両端末で共有する */
-async function publishSharedSavedSearches() {
-  const button = elements.exportSharedSearchesBtn;
-  const originalLabel = button?.textContent || "";
-  if (button) {
-    button.disabled = true;
-    button.textContent = "保存中...";
-  }
-  updateSharedSearchesStatus("共有保存中...");
-
-  try {
-    const payload = buildSharedSavedSearchesPayload();
-    await checkLocalSyncServer();
-
-    let resultMessage = "";
-    if (localSyncAvailable) {
-      const localResult = await publishSharedSavedSearchesViaLocal(payload);
-      resultMessage = localResult.message || "PC保存サーバー経由で GitHub へ保存しました";
-    } else {
-      const config = getGitHubSyncConfig();
-      if (!config.token) {
-        throw new Error(
-          "このPCで共有保存サーバーが起動していません。\n"
-            + "PowerShell で次を実行してください:\n"
-            + "python scripts/saved_searches_sync_server.py\n\n"
-            + "または GitHub トークンを保存してから再試行してください。"
-        );
-      }
-      const content = utf8ToBase64(JSON.stringify(payload, null, 2) + "\n");
-      const sha = await fetchGitHubFileSha(config);
-      const body = {
-        message: `検索条件を共有更新（${new Date().toLocaleString("ja-JP")}）`,
-        content,
-        branch: "main",
-      };
-      if (sha) body.sha = sha;
-
-      const url =
-        `https://api.github.com/repos/${encodeURIComponent(config.owner)}/`
-        + `${encodeURIComponent(config.repo)}/contents/${config.path}`;
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${config.token}`,
-          "Content-Type": "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(`GitHub への保存に失敗しました (${response.status})\n${detail}`);
-      }
-      resultMessage = "GitHub トークン経由で保存しました";
-    }
-
-    savedSearches = normalizeSavedSearches(payload.searches);
-    sharedSearchesUpdatedAt = payload.updated_at;
-    sharedSearchesLoaded = true;
-    persistSavedSearches();
-    renderSavedSearches();
-    updateSharedSearchesStatus(`${resultMessage}（反映まで数十秒かかることがあります）`);
-    alert(
-      "検索条件をスマホ共有用に保存しました。\n"
-        + "数十秒〜数分後、スマホとPCで同じ条件が見えるようになります。\n"
-        + "すぐ確認する場合は、もう一方の端末で再読み込みしてください。"
-    );
-  } catch (error) {
-    updateSharedSearchesStatus("保存に失敗しました");
-    alert(`保存に失敗しました。\n${error.message || error}`);
-  } finally {
-    if (button) {
-      button.disabled = false;
-      button.textContent = originalLabel || "検索条件をスマホ共有用に保存";
-    }
-  }
 }
 
 /** JSON をファイルとしてダウンロードする */
