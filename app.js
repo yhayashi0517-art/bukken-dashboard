@@ -14,7 +14,14 @@ const SHARED_SEARCHES_URL = resolveAssetUrl("data/saved-searches.json");
 const PAGE_SIZE = 100;
 const FAVORITES_STORAGE_KEY = "bukken-dashboard:favorites";
 const SAVED_SEARCHES_STORAGE_KEY = "bukken-dashboard:saved-searches";
+const GITHUB_SYNC_STORAGE_KEY = "bukken-dashboard:github-sync";
 const MAX_SAVED_SEARCHES = 20;
+const DEFAULT_GITHUB_SYNC = {
+  owner: "yhayashi0517-art",
+  repo: "bukken-dashboard",
+  path: "data/saved-searches.json",
+  token: "",
+};
 
 let allProperties = [];
 /** 物件ID → 物件データ */
@@ -189,6 +196,8 @@ const elements = {
   exportSharedSearchesBtn: document.getElementById("export-shared-searches-btn"),
   importSharedSearchesBtn: document.getElementById("import-shared-searches-btn"),
   importSharedSearchesInput: document.getElementById("import-shared-searches-input"),
+  githubTokenInput: document.getElementById("github-token-input"),
+  saveGithubTokenBtn: document.getElementById("save-github-token-btn"),
   sharedSearchesStatus: document.getElementById("shared-searches-status"),
   savedSearchList: document.getElementById("saved-search-list"),
   archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
@@ -422,21 +431,180 @@ function buildSharedSavedSearchesPayload() {
 }
 
 /** 共有条件の表示ステータスを更新する */
-function updateSharedSearchesStatus() {
+function updateSharedSearchesStatus(extraMessage = "") {
   if (!elements.sharedSearchesStatus) return;
+  const sync = getGitHubSyncConfig();
+  const tokenReady = Boolean(sync.token);
+  let text = "";
   if (sharedSearchesLoaded && sharedSearchesUpdatedAt) {
     const label = String(sharedSearchesUpdatedAt).replace("T", " ").replace(/\.\d+Z?$/, "");
-    elements.sharedSearchesStatus.textContent =
-      `共有条件を読み込みました（更新: ${label} / ${savedSearches.length}件）`;
+    text = `共有条件を読み込みました（更新: ${label} / ${savedSearches.length}件）`;
+  } else if (sharedSearchesLoaded) {
+    text = `共有条件を読み込みました（${savedSearches.length}件）`;
+  } else {
+    text = "共有条件未取得のため、この端末の保存内容を表示しています。";
+  }
+  text += tokenReady
+    ? " / GitHub連携: 設定済み"
+    : " / GitHub連携: 未設定（下にトークンを保存してください）";
+  if (extraMessage) {
+    text += ` / ${extraMessage}`;
+  }
+  elements.sharedSearchesStatus.textContent = text;
+}
+
+/** GitHub 連携設定を読み込む */
+function getGitHubSyncConfig() {
+  const stored = readStorageJson(GITHUB_SYNC_STORAGE_KEY, {});
+  return {
+    ...DEFAULT_GITHUB_SYNC,
+    ...(stored && typeof stored === "object" ? stored : {}),
+  };
+}
+
+/** GitHub 連携設定を保存する */
+function persistGitHubSyncConfig(config) {
+  return writeStorageJson(GITHUB_SYNC_STORAGE_KEY, config);
+}
+
+/** GitHub トークン入力欄を同期する */
+function syncGitHubTokenInput() {
+  if (!elements.githubTokenInput) return;
+  const config = getGitHubSyncConfig();
+  elements.githubTokenInput.value = config.token ? "********" : "";
+  elements.githubTokenInput.dataset.hasToken = config.token ? "1" : "0";
+}
+
+/** GitHub トークンを保存する */
+function saveGitHubTokenFromInput() {
+  if (!elements.githubTokenInput) return;
+  const value = elements.githubTokenInput.value.trim();
+  const config = getGitHubSyncConfig();
+  if (!value || value === "********") {
+    if (!config.token) {
+      alert("GitHub の Personal Access Token を入力してください。");
+    } else {
+      alert("トークンはすでに保存されています。");
+    }
+    syncGitHubTokenInput();
+    updateSharedSearchesStatus();
     return;
   }
-  if (sharedSearchesLoaded) {
-    elements.sharedSearchesStatus.textContent =
-      `共有条件を読み込みました（${savedSearches.length}件）`;
+  config.token = value;
+  if (!persistGitHubSyncConfig(config)) {
+    alert("トークンの保存に失敗しました。");
     return;
   }
-  elements.sharedSearchesStatus.textContent =
-    "共有条件未取得のため、この端末の保存内容を表示しています。";
+  syncGitHubTokenInput();
+  updateSharedSearchesStatus("トークンを保存しました");
+  alert(
+    "GitHub トークンをこの端末に保存しました。\n"
+      + "「検索条件をスマホ共有用に保存」を押すと、両端末へ反映できます。"
+  );
+}
+
+/** UTF-8 文字列を Base64 に変換する（GitHub API 用） */
+function utf8ToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+/** GitHub 上の共有JSONの SHA を取得する */
+async function fetchGitHubFileSha(config) {
+  const url =
+    `https://api.github.com/repos/${encodeURIComponent(config.owner)}/`
+    + `${encodeURIComponent(config.repo)}/contents/${config.path}`;
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${config.token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`ファイル情報の取得に失敗しました (${response.status})\n${detail}`);
+  }
+  const data = await response.json();
+  return data.sha || null;
+}
+
+/** 検索条件を GitHub に保存して両端末で共有する */
+async function publishSharedSavedSearches() {
+  const config = getGitHubSyncConfig();
+  if (!config.token) {
+    alert(
+      "先に GitHub Personal Access Token を保存してください。\n\n"
+        + "1. GitHub → Settings → Developer settings → Personal access tokens\n"
+        + "2. Fine-grained token を作成（bukken-dashboard の Contents: Read and write）\n"
+        + "3. 下の入力欄に貼り付けて「トークンを保存」"
+    );
+    elements.githubTokenInput?.focus();
+    return;
+  }
+
+  const button = elements.exportSharedSearchesBtn;
+  const originalLabel = button?.textContent || "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "保存中...";
+  }
+  updateSharedSearchesStatus("GitHub へ保存中...");
+
+  try {
+    const payload = buildSharedSavedSearchesPayload();
+    const content = utf8ToBase64(JSON.stringify(payload, null, 2) + "\n");
+    const sha = await fetchGitHubFileSha(config);
+    const body = {
+      message: `検索条件を共有更新（${new Date().toLocaleString("ja-JP")}）`,
+      content,
+      branch: "main",
+    };
+    if (sha) body.sha = sha;
+
+    const url =
+      `https://api.github.com/repos/${encodeURIComponent(config.owner)}/`
+      + `${encodeURIComponent(config.repo)}/contents/${config.path}`;
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${config.token}`,
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`GitHub への保存に失敗しました (${response.status})\n${detail}`);
+    }
+
+    savedSearches = normalizeSavedSearches(payload.searches);
+    sharedSearchesUpdatedAt = payload.updated_at;
+    sharedSearchesLoaded = true;
+    persistSavedSearches();
+    renderSavedSearches();
+    updateSharedSearchesStatus("スマホ共有用に保存しました（反映まで数十秒かかることがあります）");
+    alert(
+      "検索条件をスマホ共有用に保存しました。\n"
+        + "数十秒〜数分後、スマホとPCで同じ条件が見えるようになります。\n"
+        + "すぐ確認する場合は、もう一方の端末で再読み込みしてください。"
+    );
+  } catch (error) {
+    updateSharedSearchesStatus("保存に失敗しました");
+    alert(`保存に失敗しました。\n${error.message || error}`);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalLabel || "検索条件をスマホ共有用に保存";
+    }
+  }
 }
 
 /** JSON をファイルとしてダウンロードする */
@@ -481,19 +649,6 @@ async function loadSharedSavedSearches() {
   } catch (_error) {
     return false;
   }
-}
-
-/** 共有条件 JSON をエクスポートする */
-function exportSharedSavedSearches() {
-  const payload = buildSharedSavedSearchesPayload();
-  downloadJsonFile("saved-searches.json", payload);
-  alert(
-    "saved-searches.json をダウンロードしました。\n\n"
-      + "反映手順:\n"
-      + "1. ai_coaching/dashboard/data/saved-searches.json に上書き保存\n"
-      + "2. github_pages へ同期して GitHub に Push\n"
-      + "3. 同じファイルを ai_coaching/saved-searches.json にも置くと LINE 通知に使えます"
-  );
 }
 
 /** 共有条件 JSON をファイルから読み込む */
@@ -2476,6 +2631,7 @@ async function loadData() {
   syncFavoriteSnapshots();
   loadSavedSearches();
   await loadSharedSavedSearches();
+  syncGitHubTokenInput();
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
 
@@ -2529,7 +2685,19 @@ function setupEventListeners() {
     elements.saveSearchBtn.addEventListener("click", saveCurrentSearch);
   }
   if (elements.exportSharedSearchesBtn) {
-    elements.exportSharedSearchesBtn.addEventListener("click", exportSharedSavedSearches);
+    elements.exportSharedSearchesBtn.addEventListener("click", () => {
+      publishSharedSavedSearches();
+    });
+  }
+  if (elements.saveGithubTokenBtn) {
+    elements.saveGithubTokenBtn.addEventListener("click", saveGitHubTokenFromInput);
+  }
+  if (elements.githubTokenInput) {
+    elements.githubTokenInput.addEventListener("focus", () => {
+      if (elements.githubTokenInput.dataset.hasToken === "1") {
+        elements.githubTokenInput.value = "";
+      }
+    });
   }
   if (elements.importSharedSearchesBtn && elements.importSharedSearchesInput) {
     elements.importSharedSearchesBtn.addEventListener("click", () => {

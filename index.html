@@ -89,15 +89,23 @@
               <input type="checkbox" id="save-line-notify">
               保存時に LINE 通知対象にする
             </label>
-            <button id="export-shared-searches-btn" class="page-btn" type="button">共有条件をエクスポート</button>
+            <button id="export-shared-searches-btn" class="page-btn" type="button">検索条件をスマホ共有用に保存</button>
+            <label class="field-label" for="github-token-input">GitHubトークン（初回のみ）</label>
+            <input
+              type="password"
+              id="github-token-input"
+              class="field-input"
+              placeholder="github_pat_... を貼り付け"
+              autocomplete="off"
+            >
+            <button id="save-github-token-btn" class="page-btn" type="button">トークンを保存</button>
             <button id="import-shared-searches-btn" class="page-btn" type="button">ファイルから読み込み</button>
             <input id="import-shared-searches-input" type="file" accept="application/json,.json" hidden>
           </div>
           <p id="shared-searches-status" class="saved-search-help">共有条件を確認中...</p>
           <p class="saved-search-help">
-            スマホとPCで同じ条件を使うには、<code>saved-searches.json</code> を
-            GitHub の <code>data/</code> に置いて Push してください。
-            LINE 通知には同じファイルを <code>ai_coaching/saved-searches.json</code> にも置きます。
+            「検索条件をスマホ共有用に保存」を押すと、GitHub に反映され、スマホとPCで同じ条件が見えます。
+            初回だけ GitHub の Personal Access Token（Contents: Read and write）が必要です。
           </p>
           <div id="saved-search-list" class="saved-search-list" aria-live="polite"></div>
         </div>
@@ -138,6 +146,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=40"></script>
+  <script src="app.js?v=41"></script>
 </body>
 </html>
