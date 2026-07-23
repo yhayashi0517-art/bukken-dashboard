@@ -138,12 +138,17 @@ body {
   width: 100%;
 }
 
-.saved-search-line-option {
+.saved-search-advanced {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-top: 0.2rem;
+}
+
+.saved-search-advanced summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
 }
 
 .saved-search-help {
