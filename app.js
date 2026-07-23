@@ -203,6 +203,8 @@ const elements = {
   importSharedSearchesInput: document.getElementById("import-shared-searches-input"),
   githubTokenInput: document.getElementById("github-token-input"),
   saveGithubTokenBtn: document.getElementById("save-github-token-btn"),
+  mobileFilterToggle: document.getElementById("mobile-filter-toggle"),
+  filterPanel: document.getElementById("filter-panel"),
   sharedSearchesStatus: document.getElementById("shared-searches-status"),
   savedSearchList: document.getElementById("saved-search-list"),
   archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
@@ -933,7 +935,7 @@ function renderFavoriteCell(property) {
   const propertyId = getPropertyId(property);
   const isActive = isFavoriteId(propertyId);
   return `
-    <div class="${getCellClass("favorite")}">
+    <div ${getCellProps("favorite")}>
       <button
         type="button"
         class="favorite-btn${isActive ? " is-active" : ""}"
@@ -1679,6 +1681,13 @@ function getCellClass(columnId) {
   return `${column.className} ${getAlignClass(column)}`;
 }
 
+/** 行セル用の属性文字列を返す（スマホカード表示用の data-label 付き） */
+function getCellProps(columnId) {
+  const column = TABLE_COLUMNS.find((item) => item.id === columnId);
+  if (!column) return 'class=""';
+  return `class="${column.className} ${getAlignClass(column)}" data-label="${escapeHtml(column.label)}"`;
+}
+
 /** テーブルヘッダーを描画する */
 function renderTableHeader() {
   elements.propertyListHeader.innerHTML = TABLE_COLUMNS.map((column) => {
@@ -2186,12 +2195,12 @@ function isValidFloorPlanUrl(url) {
 
 /** 間取り図セル HTML */
 function renderFloorPlanCell(property) {
-  const cellClass = getCellClass("plan");
+  const cellProps = getCellProps("plan");
   if (!isValidFloorPlanUrl(property.floor_plan_url)) {
-    return `<div class="${cellClass}"><span class="no-plan">-</span></div>`;
+    return `<div ${cellProps}><span class="no-plan">-</span></div>`;
   }
   return `
-    <div class="${cellClass}">
+    <div ${cellProps}>
       <img
         class="floor-plan-thumb"
         src="${property.floor_plan_url}"
@@ -2345,30 +2354,30 @@ function renderProperties() {
     row.innerHTML = `
       ${renderFavoriteCell(property)}
       ${renderFloorPlanCell(property)}
-      <div class="${getCellClass("property_name")}">
+      <div ${getCellProps("property_name")}>
         <div class="name-line">
           <strong class="property-name">${property.property_name || "名称不明"}</strong>
         </div>
         <div class="row-sub">${property.address || ""}</div>
         ${referenceText}
       </div>
-      <div class="${getCellClass("display_state")}"><span class="status-badge ${statusClass}">${displayState}</span></div>
-      <div class="${getCellClass("station")}">${canonicalizeStationName(property.station) || "-"}</div>
-      <div class="${getCellClass("walk_minutes")}">${property.walk_minutes ?? "-"}分</div>
-      <div class="${getCellClass("price_jpy")}">${formatPrice(property.price_jpy)}</div>
-      <div class="${getCellClass("unit_price_m2")}">
+      <div ${getCellProps("display_state")}><span class="status-badge ${statusClass}">${displayState}</span></div>
+      <div ${getCellProps("station")}">${canonicalizeStationName(property.station) || "-"}</div>
+      <div ${getCellProps("walk_minutes")}">${property.walk_minutes ?? "-"}分</div>
+      <div ${getCellProps("price_jpy")}">${formatPrice(property.price_jpy)}</div>
+      <div ${getCellProps("unit_price_m2")}>
         <div class="unit-price-cell">
           <span>${formatDecimal(property.unit_price_m2, " 万円/㎡")}</span>
           ${bargainBadge}
         </div>
       </div>
-      <div class="${getCellClass("area_m2")}">${formatDecimal(property.area_m2, " ㎡")}</div>
-      <div class="${getCellClass("floor")}">${getDisplayFloor(property)}</div>
-      <div class="${getCellClass("layout")}">${formatLayoutLabel(property.layout)}</div>
-      <div class="${getCellClass("direction")}">${getDisplayDirection(property)}</div>
-      <div class="${getCellClass("age_years")}">${property.age_years ?? "-"}年</div>
-      <div class="${getCellClass("transaction_period")}">${getDisplayTransactionPeriod(property)}</div>
-      <div class="${getCellClass("link")}">
+      <div ${getCellProps("area_m2")}">${formatDecimal(property.area_m2, " ㎡")}</div>
+      <div ${getCellProps("floor")}">${getDisplayFloor(property)}</div>
+      <div ${getCellProps("layout")}">${formatLayoutLabel(property.layout)}</div>
+      <div ${getCellProps("direction")}">${getDisplayDirection(property)}</div>
+      <div ${getCellProps("age_years")}">${property.age_years ?? "-"}年</div>
+      <div ${getCellProps("transaction_period")}">${getDisplayTransactionPeriod(property)}</div>
+      <div ${getCellProps("link")}>
         ${linkCell}
       </div>
     `;
@@ -2670,8 +2679,31 @@ async function loadData() {
   renderProperties();
 }
 
+/** スマホ向け検索条件の開閉を設定する */
+function setupMobileFilterToggle() {
+  const toggle = elements.mobileFilterToggle;
+  const panel = elements.filterPanel;
+  if (!toggle || !panel) return;
+
+  const syncLabel = () => {
+    const isOpen = panel.classList.contains("is-open");
+    toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    const hint = toggle.querySelector(".mobile-filter-toggle-hint");
+    if (hint) {
+      hint.textContent = isOpen ? "タップして閉じる" : "タップして開く";
+    }
+  };
+
+  toggle.addEventListener("click", () => {
+    panel.classList.toggle("is-open");
+    syncLabel();
+  });
+  syncLabel();
+}
+
 /** イベントリスナーを設定する */
 function setupEventListeners() {
+  setupMobileFilterToggle();
   setupChipFilterDelegation(
     elements.filterLayout,
     () => getAvailableLayouts(),

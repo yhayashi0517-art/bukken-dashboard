@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>売出中・成約済み物件検索ダッシュボード</title>
   <base href="./">
-  <link rel="stylesheet" href="style.css?v=46">
+  <link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
   <header class="header">
@@ -17,7 +17,17 @@
   </header>
 
   <div class="dashboard-layout">
-    <aside class="sidebar" aria-label="検索・フィルター">
+    <button
+      type="button"
+      id="mobile-filter-toggle"
+      class="mobile-filter-toggle"
+      aria-expanded="false"
+      aria-controls="filter-panel"
+    >
+      <span class="mobile-filter-toggle-title">検索条件</span>
+      <span class="mobile-filter-toggle-hint">タップして開く</span>
+    </button>
+    <aside id="filter-panel" class="sidebar" aria-label="検索・フィルター">
       <div class="sidebar-inner">
         <div class="sidebar-block">
           <label class="field-label" for="search-input">検索</label>
@@ -151,6 +161,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=45"></script>
+  <script src="app.js?v=46"></script>
 </body>
 </html>
