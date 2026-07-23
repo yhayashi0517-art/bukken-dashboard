@@ -1,0 +1,27 @@
+{
+  "updated_at": "2026-07-23T10:40:00",
+  "searches": [
+    {
+      "id": "kyodo-2ldk-test",
+      "name": "経堂・2LDK・南向き（テスト）",
+      "createdAt": "2026-07-23T10:40:00.000Z",
+      "lineNotify": true,
+      "state": {
+        "search": "",
+        "status": "active",
+        "stations": ["経堂"],
+        "layouts": ["2LDK"],
+        "directions": ["南", "南東", "南西"],
+        "floorMin2": true,
+        "favoritesOnly": false,
+        "ranges": {
+          "price": { "min": 0, "max": 30000 },
+          "area": { "min": 50, "max": 120 },
+          "age": { "min": 0, "max": 50 },
+          "walk": { "min": 0, "max": 15 },
+          "bargain": { "min": 10, "max": 30 }
+        }
+      }
+    }
+  ]
+}

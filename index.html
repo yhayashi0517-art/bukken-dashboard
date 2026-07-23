@@ -75,7 +75,7 @@
         </div>
 
         <div class="sidebar-block saved-search-block">
-          <span class="field-label">保存した検索条件</span>
+          <span class="field-label">保存した検索条件（共有）</span>
           <div class="saved-search-form">
             <input
               type="text"
@@ -89,11 +89,15 @@
               <input type="checkbox" id="save-line-notify">
               保存時に LINE 通知対象にする
             </label>
-            <button id="export-line-notify-btn" class="page-btn" type="button">LINE通知設定をエクスポート</button>
+            <button id="export-shared-searches-btn" class="page-btn" type="button">共有条件をエクスポート</button>
+            <button id="import-shared-searches-btn" class="page-btn" type="button">ファイルから読み込み</button>
+            <input id="import-shared-searches-input" type="file" accept="application/json,.json" hidden>
           </div>
+          <p id="shared-searches-status" class="saved-search-help">共有条件を確認中...</p>
           <p class="saved-search-help">
-            エクスポートした <code>notification_config.json</code> を
-            <code>ai_coaching</code> フォルダに置くと、夜間更新後に LINE へ新着通知されます。
+            スマホとPCで同じ条件を使うには、<code>saved-searches.json</code> を
+            GitHub の <code>data/</code> に置いて Push してください。
+            LINE 通知には同じファイルを <code>ai_coaching/saved-searches.json</code> にも置きます。
           </p>
           <div id="saved-search-list" class="saved-search-list" aria-live="polite"></div>
         </div>
@@ -134,6 +138,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=39"></script>
+  <script src="app.js?v=40"></script>
 </body>
 </html>

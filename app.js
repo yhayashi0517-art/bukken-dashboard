@@ -10,6 +10,7 @@ function resolveAssetUrl(relativePath) {
 const DATA_URL = resolveAssetUrl("data/properties.json");
 const DATA_INDEX_URL = resolveAssetUrl("data/properties-index.json");
 const STATIONS_URL = resolveAssetUrl("data/stations.json");
+const SHARED_SEARCHES_URL = resolveAssetUrl("data/saved-searches.json");
 const PAGE_SIZE = 100;
 const FAVORITES_STORAGE_KEY = "bukken-dashboard:favorites";
 const SAVED_SEARCHES_STORAGE_KEY = "bukken-dashboard:saved-searches";
@@ -31,6 +32,10 @@ let filterFavoritesOnly = false;
 const favoriteEntries = new Map();
 /** 保存済み検索条件 */
 let savedSearches = [];
+/** 共有JSONの更新日時（表示用） */
+let sharedSearchesUpdatedAt = "";
+/** 共有JSONを読み込めたか */
+let sharedSearchesLoaded = false;
 /** 選択中の駅（最大5件・選択順を保持） */
 const selectedStations = [];
 const MAX_SELECTED_STATIONS = 5;
@@ -181,7 +186,10 @@ const elements = {
   savedSearchName: document.getElementById("saved-search-name"),
   saveSearchBtn: document.getElementById("save-search-btn"),
   saveLineNotify: document.getElementById("save-line-notify"),
-  exportLineNotifyBtn: document.getElementById("export-line-notify-btn"),
+  exportSharedSearchesBtn: document.getElementById("export-shared-searches-btn"),
+  importSharedSearchesBtn: document.getElementById("import-shared-searches-btn"),
+  importSharedSearchesInput: document.getElementById("import-shared-searches-input"),
+  sharedSearchesStatus: document.getElementById("shared-searches-status"),
   savedSearchList: document.getElementById("saved-search-list"),
   archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
   archivedFavoritesList: document.getElementById("archived-favorites-list"),
@@ -385,22 +393,139 @@ function updateFavoritesCount() {
   elements.favoritesCount.textContent = `${total.toLocaleString()}件登録`;
 }
 
-/** 保存済み検索条件を読み込む */
-function loadSavedSearches() {
-  const stored = readStorageJson(SAVED_SEARCHES_STORAGE_KEY, []);
-  savedSearches = Array.isArray(stored)
-    ? stored
-        .filter((item) => item && item.state)
-        .map((item) => ({
-          ...item,
-          lineNotify: Boolean(item.lineNotify),
-        }))
-    : [];
+/** 保存済み検索条件を正規化する */
+function normalizeSavedSearches(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((item) => item && item.state)
+    .map((item) => ({
+      id: item.id || `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: item.name || "名称なし",
+      createdAt: item.createdAt || new Date().toISOString(),
+      lineNotify: Boolean(item.lineNotify ?? item.enabled),
+      state: item.state,
+    }));
 }
 
-/** 保存済み検索条件を保存する */
+/** 共有JSON用のペイロードを作る */
+function buildSharedSavedSearchesPayload() {
+  return {
+    updated_at: new Date().toISOString(),
+    searches: savedSearches.map((item) => ({
+      id: item.id,
+      name: item.name,
+      createdAt: item.createdAt,
+      lineNotify: Boolean(item.lineNotify),
+      state: item.state,
+    })),
+  };
+}
+
+/** 共有条件の表示ステータスを更新する */
+function updateSharedSearchesStatus() {
+  if (!elements.sharedSearchesStatus) return;
+  if (sharedSearchesLoaded && sharedSearchesUpdatedAt) {
+    const label = String(sharedSearchesUpdatedAt).replace("T", " ").replace(/\.\d+Z?$/, "");
+    elements.sharedSearchesStatus.textContent =
+      `共有条件を読み込みました（更新: ${label} / ${savedSearches.length}件）`;
+    return;
+  }
+  if (sharedSearchesLoaded) {
+    elements.sharedSearchesStatus.textContent =
+      `共有条件を読み込みました（${savedSearches.length}件）`;
+    return;
+  }
+  elements.sharedSearchesStatus.textContent =
+    "共有条件未取得のため、この端末の保存内容を表示しています。";
+}
+
+/** JSON をファイルとしてダウンロードする */
+function downloadJsonFile(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+/** 保存済み検索条件を読み込む（端末ローカル） */
+function loadSavedSearches() {
+  const stored = readStorageJson(SAVED_SEARCHES_STORAGE_KEY, []);
+  savedSearches = normalizeSavedSearches(stored);
+}
+
+/** 保存済み検索条件を端末ローカルに保存する */
 function persistSavedSearches() {
   return writeStorageJson(SAVED_SEARCHES_STORAGE_KEY, savedSearches);
+}
+
+/** GitHub 上の共有JSONを読み込む */
+async function loadSharedSavedSearches() {
+  sharedSearchesLoaded = false;
+  sharedSearchesUpdatedAt = "";
+  try {
+    const response = await fetch(`${SHARED_SEARCHES_URL}?t=${Date.now()}`);
+    if (response.status === 404) return false;
+    if (!response.ok) return false;
+    const data = await response.json();
+    const searches = normalizeSavedSearches(data.searches || []);
+    savedSearches = searches;
+    sharedSearchesUpdatedAt = data.updated_at || "";
+    sharedSearchesLoaded = true;
+    persistSavedSearches();
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+/** 共有条件 JSON をエクスポートする */
+function exportSharedSavedSearches() {
+  const payload = buildSharedSavedSearchesPayload();
+  downloadJsonFile("saved-searches.json", payload);
+  alert(
+    "saved-searches.json をダウンロードしました。\n\n"
+      + "反映手順:\n"
+      + "1. ai_coaching/dashboard/data/saved-searches.json に上書き保存\n"
+      + "2. github_pages へ同期して GitHub に Push\n"
+      + "3. 同じファイルを ai_coaching/saved-searches.json にも置くと LINE 通知に使えます"
+  );
+}
+
+/** 共有条件 JSON をファイルから読み込む */
+function importSharedSavedSearchesFromFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result || ""));
+      const searches = normalizeSavedSearches(data.searches || data.rules || []);
+      if (searches.length === 0 && !Array.isArray(data.searches)) {
+        throw new Error("searches 配列が見つかりません");
+      }
+      if (searches.length > MAX_SAVED_SEARCHES) {
+        alert(`保存できる検索条件は最大 ${MAX_SAVED_SEARCHES} 件です。`);
+        return;
+      }
+      savedSearches = searches;
+      sharedSearchesUpdatedAt = data.updated_at || new Date().toISOString();
+      sharedSearchesLoaded = false;
+      if (!persistSavedSearches()) {
+        alert("読み込み後の保存に失敗しました。");
+        return;
+      }
+      renderSavedSearches();
+      updateSharedSearchesStatus();
+      alert(`検索条件を ${searches.length} 件読み込みました。\n共有するには「共有条件をエクスポート」から公開してください。`);
+    } catch (error) {
+      alert(`ファイルの読み込みに失敗しました。\n${error.message || error}`);
+    }
+  };
+  reader.readAsText(file, "utf-8");
 }
 
 /** 現在のフィルター状態をシリアライズする */
@@ -524,42 +649,9 @@ function toggleLineNotify(searchId) {
   if (!saved) return;
   saved.lineNotify = !saved.lineNotify;
   persistSavedSearches();
+  sharedSearchesLoaded = false;
   renderSavedSearches();
-}
-
-/** LINE 通知設定 JSON をエクスポートする */
-function exportLineNotificationConfig() {
-  const rules = savedSearches
-    .filter((item) => item.lineNotify)
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-      enabled: true,
-      state: item.state,
-    }));
-
-  if (rules.length === 0) {
-    alert(
-      "LINE通知対象の検索条件がありません。\n"
-        + "各条件の「LINE OFF」をクリックして ON にするか、保存時にチェックを入れてください。"
-    );
-    return;
-  }
-
-  const payload = {
-    enabled: true,
-    max_messages_per_run: 10,
-    rules,
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "notification_config.json";
-  anchor.click();
-  URL.revokeObjectURL(url);
+  updateSharedSearchesStatus();
 }
 
 /** 現在の検索条件を保存する */
@@ -590,7 +682,12 @@ function saveCurrentSearch() {
   if (elements.savedSearchName) {
     elements.savedSearchName.value = "";
   }
+  if (elements.saveLineNotify) {
+    elements.saveLineNotify.checked = false;
+  }
+  sharedSearchesLoaded = false;
   renderSavedSearches();
+  updateSharedSearchesStatus();
 }
 
 /** 保存済み検索条件を適用する */
@@ -606,7 +703,9 @@ function deleteSavedSearch(searchId) {
   if (index === -1) return;
   savedSearches.splice(index, 1);
   persistSavedSearches();
+  sharedSearchesLoaded = false;
   renderSavedSearches();
+  updateSharedSearchesStatus();
 }
 
 /** フィルター状態を復元する */
@@ -2376,6 +2475,7 @@ async function loadData() {
   loadFavorites();
   syncFavoriteSnapshots();
   loadSavedSearches();
+  await loadSharedSavedSearches();
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
 
@@ -2392,6 +2492,7 @@ async function loadData() {
   setStationOptions(mergeStationOptions(catalogStations, propertyStations.length ? propertyStations : data.stations));
   renderAllChipFilters();
   renderSavedSearches();
+  updateSharedSearchesStatus();
   renderTableHeader();
   renderMarketSummary();
   resetPage();
@@ -2427,8 +2528,18 @@ function setupEventListeners() {
   if (elements.saveSearchBtn) {
     elements.saveSearchBtn.addEventListener("click", saveCurrentSearch);
   }
-  if (elements.exportLineNotifyBtn) {
-    elements.exportLineNotifyBtn.addEventListener("click", exportLineNotificationConfig);
+  if (elements.exportSharedSearchesBtn) {
+    elements.exportSharedSearchesBtn.addEventListener("click", exportSharedSavedSearches);
+  }
+  if (elements.importSharedSearchesBtn && elements.importSharedSearchesInput) {
+    elements.importSharedSearchesBtn.addEventListener("click", () => {
+      elements.importSharedSearchesInput.click();
+    });
+    elements.importSharedSearchesInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      importSharedSavedSearchesFromFile(file);
+      event.target.value = "";
+    });
   }
   if (elements.savedSearchName) {
     elements.savedSearchName.addEventListener("keydown", (event) => {
