@@ -1,26 +1,30 @@
 {
-  "updated_at": "2026-07-23 23:02:08",
-  "total_count": 120110,
-  "active_count": 37498,
-  "sold_count": 82612,
+  "updated_at": "2026-08-08 11:51:17",
+  "total_count": 139203,
+  "active_count": 56285,
+  "sold_count": 82918,
   "delisted_count": 0,
-  "bargain_count": 1402,
+  "bargain_count": 2512,
   "stations": [
     "新宿",
+    "MCC三鷹ビル",
     "あざみ野",
     "いずみ中央",
     "いずみ野",
     "お台場海浜公園",
     "お花茶屋",
     "こどもの国",
+    "すずかけ台",
     "たまプラーザ",
     "つくし野",
+    "つつじヶ丘",
     "とうきょうスカイツリー",
     "ときわ台",
     "はるひ野",
     "はるみらい",
     "みなとみらい",
     "ゆめが丘",
+    "シティ能見台東",
     "センター北",
     "センター南",
     "テレコムセンター",
@@ -87,11 +91,13 @@
     "久が原",
     "久地",
     "久我山",
+    "久良岐公園前",
     "九品仏",
     "九段下",
     "亀戸",
     "亀戸水神",
     "亀有",
+    "亀甲山バス停",
     "二俣川",
     "二子新地",
     "二子玉川",
@@ -184,7 +190,7 @@
     "南町田グランベリーパーク",
     "南砂町",
     "南部市場",
-    "南阿佐ケ谷",
+    "南阿佐ヶ谷",
     "原宿",
     "参宮橋",
     "反町",
@@ -198,6 +204,7 @@
     "和田町",
     "品川",
     "品川シーサイド",
+    "善行",
     "喜多見",
     "四ッ谷",
     "四ツ木",
@@ -251,6 +258,7 @@
     "宮の坂",
     "宮ノ前",
     "宮前平",
+    "宮前平グリーンハイツ東",
     "宮崎台",
     "宿河原",
     "富士見ヶ丘",
@@ -282,11 +290,9 @@
     "巣鴨新田",
     "左近山第５",
     "市が尾",
-    "市ケ谷",
     "市ヶ谷",
     "市場前",
     "市大医学部",
-    "希望ケ丘",
     "希望ヶ丘",
     "幡ヶ谷",
     "平井",
@@ -334,6 +340,7 @@
     "新宿西口",
     "新富町",
     "新小岩",
+    "新川",
     "新川崎",
     "新庚申塚",
     "新御徒町",
@@ -384,6 +391,8 @@
     "木場",
     "末広町",
     "本所吾妻橋",
+    "本牧2丁目",
+    "本町五丁目バス停",
     "本蓮沼",
     "本郷三丁目",
     "本郷台",
@@ -447,6 +456,7 @@
     "森下",
     "椎名町",
     "横浜",
+    "橘学苑・橘テニスアカデミー前",
     "武蔵中原",
     "武蔵境",
     "武蔵小山",
@@ -476,6 +486,7 @@
     "沼部",
     "泉岳寺",
     "法泉下",
+    "法泉町",
     "洋光台",
     "洗足",
     "洗足池",
@@ -528,6 +539,7 @@
     "町屋駅前",
     "登戸",
     "白山",
+    "白山道",
     "白楽",
     "白金台",
     "白金高輪",
@@ -621,12 +633,15 @@
     "蓮沼",
     "蔵前",
     "藤が丘",
+    "藤沢",
     "虎ノ門",
     "虎ノ門ヒルズ",
     "虹が丘",
+    "虹ヶ丘団地",
     "表参道",
     "西ケ原",
     "西ヶ原四丁目",
+    "西ヶ谷戸",
     "西台",
     "西大井",
     "西大島",
@@ -689,7 +704,7 @@
     "門前仲町",
     "関内",
     "阪東橋",
-    "阿佐ケ谷",
+    "阿佐ヶ谷",
     "雑司が谷",
     "雑司ヶ谷",
     "雑色",
@@ -710,6 +725,7 @@
     "馬込",
     "駒場東大前",
     "駒沢大学",
+    "駒澤大学",
     "駒込",
     "高井戸",
     "高円寺",
@@ -727,7 +743,6 @@
     "鴨居",
     "鵜の木",
     "鶯谷",
-    "鶴ケ峰",
     "鶴ヶ峰",
     "鶴川",
     "鶴見",
@@ -742,22 +757,22 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 735,
+  "station_count": 750,
   "market_summary": {
-    "global_avg_unit_price": 80.6,
+    "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
     "stations": {
       "あざみ野": {
-        "avg_unit_price": 60.3,
-        "count": 485
+        "avg_unit_price": 60.5,
+        "count": 486
       },
       "いずみ中央": {
-        "avg_unit_price": 37.2,
-        "count": 71
+        "avg_unit_price": 37.4,
+        "count": 72
       },
       "いずみ野": {
-        "avg_unit_price": 25.0,
-        "count": 87
+        "avg_unit_price": 24.8,
+        "count": 94
       },
       "お台場海浜公園": {
         "avg_unit_price": 123.9,
@@ -772,8 +787,8 @@
         "count": 54
       },
       "たまプラーザ": {
-        "avg_unit_price": 73.6,
-        "count": 655
+        "avg_unit_price": 74.1,
+        "count": 649
       },
       "とうきょうスカイツリー": {
         "avg_unit_price": 74.7,
@@ -792,8 +807,8 @@
         "count": 212
       },
       "センター北": {
-        "avg_unit_price": 76.1,
-        "count": 303
+        "avg_unit_price": 76.2,
+        "count": 307
       },
       "センター南": {
         "avg_unit_price": 70.9,
@@ -805,11 +820,11 @@
       },
       "三ツ境": {
         "avg_unit_price": 34.9,
-        "count": 131
+        "count": 133
       },
       "三ツ沢上町": {
-        "avg_unit_price": 44.7,
-        "count": 188
+        "avg_unit_price": 44.5,
+        "count": 189
       },
       "三ツ沢下町": {
         "avg_unit_price": 44.6,
@@ -860,20 +875,20 @@
         "count": 30
       },
       "上大岡": {
-        "avg_unit_price": 51.3,
-        "count": 659
+        "avg_unit_price": 51.5,
+        "count": 667
       },
       "上星川": {
-        "avg_unit_price": 39.3,
-        "count": 160
+        "avg_unit_price": 39.0,
+        "count": 164
       },
       "上板橋": {
         "avg_unit_price": 49.1,
         "count": 114
       },
       "上永谷": {
-        "avg_unit_price": 33.3,
-        "count": 335
+        "avg_unit_price": 33.1,
+        "count": 344
       },
       "上町": {
         "avg_unit_price": 81.8,
@@ -908,8 +923,8 @@
         "count": 29
       },
       "下永谷": {
-        "avg_unit_price": 32.1,
-        "count": 88
+        "avg_unit_price": 32.3,
+        "count": 90
       },
       "下神明": {
         "avg_unit_price": 73.3,
@@ -945,7 +960,7 @@
       },
       "並木中央": {
         "avg_unit_price": 26.9,
-        "count": 90
+        "count": 93
       },
       "並木北": {
         "avg_unit_price": 23.9,
@@ -954,14 +969,6 @@
       "中井": {
         "avg_unit_price": 66.8,
         "count": 28
-      },
-      "中山": {
-        "avg_unit_price": 44.2,
-        "count": 266
-      },
-      "中川": {
-        "avg_unit_price": 63.6,
-        "count": 139
       },
       "中延": {
         "avg_unit_price": 112.6,
@@ -974,10 +981,6 @@
       "中板橋": {
         "avg_unit_price": 57.8,
         "count": 51
-      },
-      "中田": {
-        "avg_unit_price": 33.8,
-        "count": 7
       },
       "中目黒": {
         "avg_unit_price": 140.9,
@@ -996,8 +999,8 @@
         "count": 153
       },
       "中野島": {
-        "avg_unit_price": 50.0,
-        "count": 167
+        "avg_unit_price": 50.1,
+        "count": 168
       },
       "中野新橋": {
         "avg_unit_price": 88.5,
@@ -1012,8 +1015,8 @@
         "count": 40
       },
       "久地": {
-        "avg_unit_price": 51.6,
-        "count": 184
+        "avg_unit_price": 51.9,
+        "count": 188
       },
       "久我山": {
         "avg_unit_price": 71.6,
@@ -1041,11 +1044,11 @@
       },
       "二俣川": {
         "avg_unit_price": 31.8,
-        "count": 435
+        "count": 438
       },
       "二子新地": {
-        "avg_unit_price": 74.4,
-        "count": 270
+        "avg_unit_price": 74.1,
+        "count": 244
       },
       "二子玉川": {
         "avg_unit_price": 117.2,
@@ -1060,24 +1063,24 @@
         "count": 107
       },
       "五月台": {
-        "avg_unit_price": 51.6,
-        "count": 44
+        "avg_unit_price": 51.3,
+        "count": 45
       },
       "井荻": {
         "avg_unit_price": 71.3,
         "count": 89
       },
       "京急富岡": {
-        "avg_unit_price": 27.5,
-        "count": 142
+        "avg_unit_price": 27.8,
+        "count": 145
       },
       "京急川崎": {
-        "avg_unit_price": 77.1,
-        "count": 129
+        "avg_unit_price": 76.8,
+        "count": 130
       },
       "京急新子安": {
-        "avg_unit_price": 51.2,
-        "count": 36
+        "avg_unit_price": 50.5,
+        "count": 37
       },
       "京急東神奈川": {
         "avg_unit_price": 78.5,
@@ -1088,8 +1091,8 @@
         "count": 67
       },
       "京急鶴見": {
-        "avg_unit_price": 60.3,
-        "count": 139
+        "avg_unit_price": 60.0,
+        "count": 142
       },
       "京成小岩": {
         "avg_unit_price": 53.7,
@@ -1156,32 +1159,32 @@
         "count": 37
       },
       "仲町台": {
-        "avg_unit_price": 66.2,
-        "count": 365
+        "avg_unit_price": 66.3,
+        "count": 371
       },
       "伊勢佐木長者町": {
-        "avg_unit_price": 77.3,
-        "count": 353
+        "avg_unit_price": 77.5,
+        "count": 351
       },
       "住吉": {
         "avg_unit_price": 86.5,
         "count": 85
       },
       "保土ケ谷": {
-        "avg_unit_price": 35.6,
-        "count": 448
+        "avg_unit_price": 35.8,
+        "count": 454
       },
       "信濃町": {
         "avg_unit_price": 119.0,
         "count": 21
       },
       "元住吉": {
-        "avg_unit_price": 81.4,
-        "count": 398
+        "avg_unit_price": 81.2,
+        "count": 402
       },
       "元町・中華街": {
         "avg_unit_price": 91.1,
-        "count": 330
+        "count": 332
       },
       "光が丘": {
         "avg_unit_price": 64.3,
@@ -1196,7 +1199,7 @@
         "count": 198
       },
       "八丁畷": {
-        "avg_unit_price": 63.0,
+        "avg_unit_price": 63.7,
         "count": 226
       },
       "八幡山": {
@@ -1220,8 +1223,8 @@
         "count": 38
       },
       "六浦": {
-        "avg_unit_price": 25.9,
-        "count": 188
+        "avg_unit_price": 25.8,
+        "count": 191
       },
       "六町": {
         "avg_unit_price": 45.7,
@@ -1256,8 +1259,8 @@
         "count": 26
       },
       "北山田": {
-        "avg_unit_price": 62.6,
-        "count": 163
+        "avg_unit_price": 63.0,
+        "count": 164
       },
       "北新横浜": {
         "avg_unit_price": 57.9,
@@ -1276,8 +1279,8 @@
         "count": 274
       },
       "十日市場": {
-        "avg_unit_price": 37.6,
-        "count": 332
+        "avg_unit_price": 37.4,
+        "count": 337
       },
       "十条": {
         "avg_unit_price": 101.4,
@@ -1320,16 +1323,16 @@
         "count": 240
       },
       "南万騎が原": {
-        "avg_unit_price": 40.1,
-        "count": 62
+        "avg_unit_price": 40.8,
+        "count": 63
       },
       "南千住": {
         "avg_unit_price": 73.5,
         "count": 323
       },
       "南太田": {
-        "avg_unit_price": 55.0,
-        "count": 78
+        "avg_unit_price": 56.2,
+        "count": 74
       },
       "南新宿": {
         "avg_unit_price": 104.0,
@@ -1343,7 +1346,7 @@
         "avg_unit_price": 41.8,
         "count": 10
       },
-      "南阿佐ケ谷": {
+      "南阿佐ヶ谷": {
         "avg_unit_price": 98.5,
         "count": 132
       },
@@ -1364,20 +1367,20 @@
         "count": 407
       },
       "吉野町": {
-        "avg_unit_price": 56.9,
-        "count": 418
+        "avg_unit_price": 57.3,
+        "count": 422
       },
       "向原": {
         "avg_unit_price": 93.7,
         "count": 2
       },
       "向河原": {
-        "avg_unit_price": 76.4,
-        "count": 22
+        "avg_unit_price": 77.6,
+        "count": 23
       },
       "和田町": {
-        "avg_unit_price": 40.8,
-        "count": 142
+        "avg_unit_price": 41.0,
+        "count": 143
       },
       "品川": {
         "avg_unit_price": 127.9,
@@ -1452,8 +1455,8 @@
         "count": 344
       },
       "大口": {
-        "avg_unit_price": 56.9,
-        "count": 226
+        "avg_unit_price": 57.1,
+        "count": 229
       },
       "大塚": {
         "avg_unit_price": 100.6,
@@ -1484,8 +1487,8 @@
         "count": 43
       },
       "大師橋": {
-        "avg_unit_price": 57.2,
-        "count": 71
+        "avg_unit_price": 56.1,
+        "count": 60
       },
       "大手町": {
         "avg_unit_price": 190.9,
@@ -1536,8 +1539,8 @@
         "count": 118
       },
       "子安": {
-        "avg_unit_price": 79.7,
-        "count": 58
+        "avg_unit_price": 80.1,
+        "count": 59
       },
       "学習院下": {
         "avg_unit_price": 77.8,
@@ -1548,8 +1551,8 @@
         "count": 334
       },
       "安善": {
-        "avg_unit_price": 31.5,
-        "count": 21
+        "avg_unit_price": 31.8,
+        "count": 22
       },
       "宝町": {
         "avg_unit_price": 96.7,
@@ -1564,16 +1567,16 @@
         "count": 1
       },
       "宮前平": {
-        "avg_unit_price": 47.4,
-        "count": 548
+        "avg_unit_price": 47.6,
+        "count": 551
       },
       "宮崎台": {
         "avg_unit_price": 65.8,
-        "count": 446
+        "count": 439
       },
       "宿河原": {
-        "avg_unit_price": 54.2,
-        "count": 100
+        "avg_unit_price": 53.9,
+        "count": 101
       },
       "富士見台": {
         "avg_unit_price": 74.3,
@@ -1592,8 +1595,8 @@
         "count": 214
       },
       "小島新田": {
-        "avg_unit_price": 48.7,
-        "count": 24
+        "avg_unit_price": 49.5,
+        "count": 25
       },
       "小川町": {
         "avg_unit_price": 133.2,
@@ -1608,8 +1611,8 @@
         "count": 89
       },
       "小田栄": {
-        "avg_unit_price": 49.4,
-        "count": 77
+        "avg_unit_price": 49.6,
+        "count": 78
       },
       "小竹向原": {
         "avg_unit_price": 70.6,
@@ -1620,8 +1623,8 @@
         "count": 20
       },
       "尻手": {
-        "avg_unit_price": 69.9,
-        "count": 356
+        "avg_unit_price": 70.6,
+        "count": 349
       },
       "尾久": {
         "avg_unit_price": 67.1,
@@ -1632,12 +1635,12 @@
         "count": 76
       },
       "屏風浦": {
-        "avg_unit_price": 41.4,
-        "count": 205
+        "avg_unit_price": 41.3,
+        "count": 208
       },
       "山手": {
-        "avg_unit_price": 57.0,
-        "count": 208
+        "avg_unit_price": 57.5,
+        "count": 211
       },
       "岩本町": {
         "avg_unit_price": 136.2,
@@ -1649,15 +1652,15 @@
       },
       "川和町": {
         "avg_unit_price": 43.0,
-        "count": 131
+        "count": 132
       },
       "川崎": {
-        "avg_unit_price": 79.6,
-        "count": 1614
+        "avg_unit_price": 79.9,
+        "count": 1644
       },
       "川崎大師": {
-        "avg_unit_price": 59.0,
-        "count": 158
+        "avg_unit_price": 58.2,
+        "count": 156
       },
       "川崎新町": {
         "avg_unit_price": 54.6,
@@ -1688,8 +1691,8 @@
         "count": 41
       },
       "平沼橋": {
-        "avg_unit_price": 78.0,
-        "count": 160
+        "avg_unit_price": 77.1,
+        "count": 163
       },
       "平間": {
         "avg_unit_price": 57.9,
@@ -1711,9 +1714,13 @@
         "avg_unit_price": 43.0,
         "count": 4
       },
+      "弘明寺": {
+        "avg_unit_price": 40.6,
+        "count": 245
+      },
       "弥生台": {
-        "avg_unit_price": 35.4,
-        "count": 85
+        "avg_unit_price": 35.3,
+        "count": 90
       },
       "後楽園": {
         "avg_unit_price": 117.6,
@@ -1764,8 +1771,8 @@
         "count": 67
       },
       "戸塚": {
-        "avg_unit_price": 40.8,
-        "count": 1180
+        "avg_unit_price": 40.1,
+        "count": 1148
       },
       "戸越": {
         "avg_unit_price": 94.9,
@@ -1781,7 +1788,7 @@
       },
       "戸部": {
         "avg_unit_price": 87.1,
-        "count": 282
+        "count": 287
       },
       "扇大橋": {
         "avg_unit_price": 51.7,
@@ -1816,8 +1823,8 @@
         "count": 77
       },
       "新子安": {
-        "avg_unit_price": 66.5,
-        "count": 221
+        "avg_unit_price": 66.6,
+        "count": 222
       },
       "新宿": {
         "avg_unit_price": 103.8,
@@ -1844,8 +1851,8 @@
         "count": 457
       },
       "新川崎": {
-        "avg_unit_price": 78.3,
-        "count": 370
+        "avg_unit_price": 78.4,
+        "count": 369
       },
       "新庚申塚": {
         "avg_unit_price": 67.6,
@@ -1864,8 +1871,8 @@
         "count": 12
       },
       "新杉田": {
-        "avg_unit_price": 55.4,
-        "count": 146
+        "avg_unit_price": 55.3,
+        "count": 147
       },
       "新板橋": {
         "avg_unit_price": 76.9,
@@ -1932,12 +1939,8 @@
         "count": 4
       },
       "日ノ出町": {
-        "avg_unit_price": 86.5,
-        "count": 91
-      },
-      "日吉": {
-        "avg_unit_price": 58.1,
-        "count": 545
+        "avg_unit_price": 86.8,
+        "count": 94
       },
       "日吉本町": {
         "avg_unit_price": 61.8,
@@ -1962,10 +1965,6 @@
       "明大前": {
         "avg_unit_price": 81.3,
         "count": 44
-      },
-      "星川": {
-        "avg_unit_price": 61.6,
-        "count": 186
       },
       "春日": {
         "avg_unit_price": 133.0,
@@ -2016,16 +2015,12 @@
         "count": 122
       },
       "本郷台": {
-        "avg_unit_price": 41.2,
-        "count": 254
+        "avg_unit_price": 41.1,
+        "count": 256
       },
       "本駒込": {
         "avg_unit_price": 101.0,
         "count": 94
-      },
-      "杉田": {
-        "avg_unit_price": 34.0,
-        "count": 141
       },
       "東あずま": {
         "avg_unit_price": 52.0,
@@ -2072,8 +2067,8 @@
         "count": 29
       },
       "東戸塚": {
-        "avg_unit_price": 49.8,
-        "count": 930
+        "avg_unit_price": 49.9,
+        "count": 957
       },
       "東新宿": {
         "avg_unit_price": 85.6,
@@ -2100,8 +2095,8 @@
         "count": 41
       },
       "東神奈川": {
-        "avg_unit_price": 78.7,
-        "count": 177
+        "avg_unit_price": 79.1,
+        "count": 179
       },
       "東銀座": {
         "avg_unit_price": 121.9,
@@ -2152,20 +2147,16 @@
         "count": 38
       },
       "柿生": {
-        "avg_unit_price": 37.3,
-        "count": 252
+        "avg_unit_price": 37.2,
+        "count": 254
       },
       "栄町": {
         "avg_unit_price": 51.4,
         "count": 1
       },
       "栗平": {
-        "avg_unit_price": 52.3,
-        "count": 71
-      },
-      "根岸": {
-        "avg_unit_price": 43.1,
-        "count": 326
+        "avg_unit_price": 52.4,
+        "count": 72
       },
       "根津": {
         "avg_unit_price": 119.2,
@@ -2184,8 +2175,8 @@
         "count": 147
       },
       "桜木町": {
-        "avg_unit_price": 101.6,
-        "count": 290
+        "avg_unit_price": 102.0,
+        "count": 294
       },
       "梅屋敷": {
         "avg_unit_price": 70.2,
@@ -2196,8 +2187,8 @@
         "count": 136
       },
       "梶が谷": {
-        "avg_unit_price": 56.1,
-        "count": 305
+        "avg_unit_price": 56.7,
+        "count": 312
       },
       "梶原": {
         "avg_unit_price": 57.2,
@@ -2212,12 +2203,12 @@
         "count": 81
       },
       "横浜": {
-        "avg_unit_price": 94.2,
-        "count": 1075
+        "avg_unit_price": 98.8,
+        "count": 956
       },
       "武蔵中原": {
-        "avg_unit_price": 61.3,
-        "count": 217
+        "avg_unit_price": 61.0,
+        "count": 219
       },
       "武蔵境": {
         "avg_unit_price": 78.1,
@@ -2228,20 +2219,20 @@
         "count": 210
       },
       "武蔵小杉": {
-        "avg_unit_price": 118.9,
-        "count": 984
+        "avg_unit_price": 118.8,
+        "count": 981
       },
       "武蔵新城": {
-        "avg_unit_price": 66.3,
-        "count": 433
+        "avg_unit_price": 67.2,
+        "count": 454
       },
       "武蔵新田": {
         "avg_unit_price": 69.3,
         "count": 60
       },
       "武蔵溝ノ口": {
-        "avg_unit_price": 69.4,
-        "count": 84
+        "avg_unit_price": 69.6,
+        "count": 88
       },
       "武蔵白石": {
         "avg_unit_price": 35.0,
@@ -2291,10 +2282,6 @@
         "avg_unit_price": 112.6,
         "count": 233
       },
-      "江田": {
-        "avg_unit_price": 56.7,
-        "count": 141
-      },
       "池ノ上": {
         "avg_unit_price": 115.9,
         "count": 16
@@ -2325,7 +2312,7 @@
       },
       "洋光台": {
         "avg_unit_price": 28.3,
-        "count": 250
+        "count": 255
       },
       "洗足": {
         "avg_unit_price": 86.8,
@@ -2336,8 +2323,8 @@
         "count": 22
       },
       "津田山": {
-        "avg_unit_price": 60.5,
-        "count": 42
+        "avg_unit_price": 61.4,
+        "count": 43
       },
       "浅草橋": {
         "avg_unit_price": 107.6,
@@ -2368,8 +2355,8 @@
         "count": 98
       },
       "海の公園南口": {
-        "avg_unit_price": 35.6,
-        "count": 14
+        "avg_unit_price": 34.6,
+        "count": 15
       },
       "海の公園柴口": {
         "avg_unit_price": 35.5,
@@ -2388,12 +2375,12 @@
         "count": 259
       },
       "港南中央": {
-        "avg_unit_price": 42.4,
-        "count": 134
+        "avg_unit_price": 43.2,
+        "count": 138
       },
       "港南台": {
-        "avg_unit_price": 32.4,
-        "count": 467
+        "avg_unit_price": 32.5,
+        "count": 470
       },
       "港町": {
         "avg_unit_price": 79.1,
@@ -2408,8 +2395,8 @@
         "count": 18
       },
       "溝の口": {
-        "avg_unit_price": 67.7,
-        "count": 569
+        "avg_unit_price": 67.5,
+        "count": 567
       },
       "滝野川一丁目": {
         "avg_unit_price": 89.0,
@@ -2420,16 +2407,16 @@
         "count": 22
       },
       "瀬谷": {
-        "avg_unit_price": 41.1,
-        "count": 69
+        "avg_unit_price": 40.8,
+        "count": 71
       },
       "熊野前": {
         "avg_unit_price": 68.0,
         "count": 79
       },
       "片倉町": {
-        "avg_unit_price": 46.1,
-        "count": 208
+        "avg_unit_price": 46.0,
+        "count": 210
       },
       "牛田": {
         "avg_unit_price": 62.9,
@@ -2454,10 +2441,6 @@
       "瑞江": {
         "avg_unit_price": 58.8,
         "count": 109
-      },
-      "生田": {
-        "avg_unit_price": 36.7,
-        "count": 312
       },
       "生麦": {
         "avg_unit_price": 44.1,
@@ -2537,23 +2520,23 @@
       },
       "矢向": {
         "avg_unit_price": 69.3,
-        "count": 452
+        "count": 455
       },
       "石川台": {
         "avg_unit_price": 69.1,
         "count": 55
       },
       "石川町": {
-        "avg_unit_price": 64.5,
-        "count": 285
+        "avg_unit_price": 64.6,
+        "count": 287
       },
       "石神井公園": {
         "avg_unit_price": 75.9,
         "count": 164
       },
       "磯子": {
-        "avg_unit_price": 43.8,
-        "count": 532
+        "avg_unit_price": 44.7,
+        "count": 547
       },
       "祐天寺": {
         "avg_unit_price": 102.8,
@@ -2564,12 +2547,12 @@
         "count": 137
       },
       "神奈川": {
-        "avg_unit_price": 76.0,
-        "count": 106
+        "avg_unit_price": 53.4,
+        "count": 2666
       },
       "神奈川新町": {
-        "avg_unit_price": 63.4,
-        "count": 109
+        "avg_unit_price": 64.0,
+        "count": 111
       },
       "神楽坂": {
         "avg_unit_price": 132.6,
@@ -2592,8 +2575,8 @@
         "count": 181
       },
       "稲田堤": {
-        "avg_unit_price": 35.6,
-        "count": 23
+        "avg_unit_price": 36.5,
+        "count": 24
       },
       "稲荷町": {
         "avg_unit_price": 107.3,
@@ -2648,8 +2631,8 @@
         "count": 86
       },
       "綱島": {
-        "avg_unit_price": 62.0,
-        "count": 499
+        "avg_unit_price": 61.9,
+        "count": 501
       },
       "綾瀬": {
         "avg_unit_price": 62.9,
@@ -2661,7 +2644,7 @@
       },
       "緑園都市": {
         "avg_unit_price": 49.5,
-        "count": 113
+        "count": 114
       },
       "練馬": {
         "avg_unit_price": 76.9,
@@ -2680,8 +2663,8 @@
         "count": 50
       },
       "能見台": {
-        "avg_unit_price": 42.9,
-        "count": 186
+        "avg_unit_price": 42.8,
+        "count": 192
       },
       "自由が丘": {
         "avg_unit_price": 105.8,
@@ -2692,8 +2675,8 @@
         "count": 17
       },
       "舞岡": {
-        "avg_unit_price": 49.0,
-        "count": 25
+        "avg_unit_price": 48.4,
+        "count": 27
       },
       "船堀": {
         "avg_unit_price": 68.3,
@@ -2712,8 +2695,8 @@
         "count": 93
       },
       "花月総持寺": {
-        "avg_unit_price": 46.2,
-        "count": 56
+        "avg_unit_price": 46.8,
+        "count": 58
       },
       "若松河田": {
         "avg_unit_price": 108.3,
@@ -2792,8 +2775,8 @@
         "count": 50
       },
       "蒔田": {
-        "avg_unit_price": 46.6,
-        "count": 198
+        "avg_unit_price": 46.7,
+        "count": 200
       },
       "蒲田": {
         "avg_unit_price": 74.4,
@@ -2810,10 +2793,6 @@
       "蔵前": {
         "avg_unit_price": 108.7,
         "count": 210
-      },
-      "藤が丘": {
-        "avg_unit_price": 54.7,
-        "count": 169
       },
       "虎ノ門": {
         "avg_unit_price": 153.1,
@@ -2880,8 +2859,8 @@
         "count": 117
       },
       "西横浜": {
-        "avg_unit_price": 64.8,
-        "count": 174
+        "avg_unit_price": 65.3,
+        "count": 176
       },
       "西武新宿": {
         "avg_unit_price": 89.3,
@@ -2900,8 +2879,8 @@
         "count": 436
       },
       "西谷": {
-        "avg_unit_price": 29.3,
-        "count": 136
+        "avg_unit_price": 29.2,
+        "count": 139
       },
       "西馬込": {
         "avg_unit_price": 73.8,
@@ -2976,8 +2955,8 @@
         "count": 47
       },
       "踊場": {
-        "avg_unit_price": 42.1,
-        "count": 71
+        "avg_unit_price": 41.9,
+        "count": 72
       },
       "辰巳": {
         "avg_unit_price": 82.1,
@@ -2996,8 +2975,8 @@
         "count": 47
       },
       "都筑ふれあいの丘": {
-        "avg_unit_price": 54.4,
-        "count": 224
+        "avg_unit_price": 54.5,
+        "count": 227
       },
       "野島公園": {
         "avg_unit_price": 37.2,
@@ -3008,20 +2987,20 @@
         "count": 85
       },
       "金沢八景": {
-        "avg_unit_price": 39.5,
-        "count": 184
+        "avg_unit_price": 39.6,
+        "count": 187
       },
       "金沢文庫": {
-        "avg_unit_price": 35.8,
-        "count": 362
+        "avg_unit_price": 35.7,
+        "count": 367
       },
       "金町": {
         "avg_unit_price": 65.2,
         "count": 434
       },
       "鈴木町": {
-        "avg_unit_price": 73.1,
-        "count": 123
+        "avg_unit_price": 72.1,
+        "count": 101
       },
       "銀座": {
         "avg_unit_price": 137.8,
@@ -3048,14 +3027,14 @@
         "count": 96
       },
       "関内": {
-        "avg_unit_price": 83.8,
-        "count": 228
+        "avg_unit_price": 83.2,
+        "count": 221
       },
       "阪東橋": {
-        "avg_unit_price": 72.8,
-        "count": 616
+        "avg_unit_price": 73.3,
+        "count": 621
       },
-      "阿佐ケ谷": {
+      "阿佐ヶ谷": {
         "avg_unit_price": 85.7,
         "count": 76
       },
@@ -3088,8 +3067,8 @@
         "count": 285
       },
       "青葉台": {
-        "avg_unit_price": 48.0,
-        "count": 562
+        "avg_unit_price": 48.2,
+        "count": 566
       },
       "面影橋": {
         "avg_unit_price": 95.1,
@@ -3144,16 +3123,8 @@
         "count": 56
       },
       "高島町": {
-        "avg_unit_price": 102.0,
-        "count": 188
-      },
-      "高津": {
-        "avg_unit_price": 75.4,
-        "count": 238
-      },
-      "高田": {
-        "avg_unit_price": 53.3,
-        "count": 81
+        "avg_unit_price": 99.1,
+        "count": 163
       },
       "高田馬場": {
         "avg_unit_price": 96.0,
@@ -3180,8 +3151,8 @@
         "count": 43
       },
       "鴨居": {
-        "avg_unit_price": 36.8,
-        "count": 561
+        "avg_unit_price": 36.6,
+        "count": 565
       },
       "鵜の木": {
         "avg_unit_price": 74.8,
@@ -3192,28 +3163,28 @@
         "count": 157
       },
       "鶴見": {
-        "avg_unit_price": 51.0,
-        "count": 700
+        "avg_unit_price": 50.8,
+        "count": 708
       },
       "鶴見小野": {
-        "avg_unit_price": 47.3,
-        "count": 35
+        "avg_unit_price": 47.0,
+        "count": 36
       },
       "鶴見市場": {
-        "avg_unit_price": 56.6,
-        "count": 267
+        "avg_unit_price": 56.4,
+        "count": 264
       },
       "鷺ノ宮": {
         "avg_unit_price": 72.4,
         "count": 93
       },
       "鷺沼": {
-        "avg_unit_price": 61.8,
-        "count": 620
+        "avg_unit_price": 61.9,
+        "count": 622
       },
       "鹿島田": {
-        "avg_unit_price": 70.6,
-        "count": 332
+        "avg_unit_price": 70.8,
+        "count": 334
       },
       "麹町": {
         "avg_unit_price": 168.9,
@@ -3224,16 +3195,12 @@
         "count": 201
       },
       "黄金町": {
-        "avg_unit_price": 62.5,
-        "count": 224
-      },
-      "黒川": {
-        "avg_unit_price": 32.9,
-        "count": 1
+        "avg_unit_price": 62.3,
+        "count": 226
       }
     }
   },
-  "chunk_count": 7,
+  "chunk_count": 9,
   "chunks": [
     "properties-001.json",
     "properties-002.json",
@@ -3241,6 +3208,8 @@
     "properties-004.json",
     "properties-005.json",
     "properties-006.json",
-    "properties-007.json"
+    "properties-007.json",
+    "properties-008.json",
+    "properties-009.json"
   ]
 }

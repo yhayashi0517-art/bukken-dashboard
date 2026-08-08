@@ -170,6 +170,7 @@ const TABLE_COLUMNS = [
   { id: "direction", label: "方位", sortable: true, type: "string", className: "col-direction", align: "center" },
   { id: "age_years", label: "築年数", sortable: true, type: "number", className: "col-age", align: "end" },
   { id: "transaction_period", label: "取引時期", sortable: true, type: "string", className: "col-period", align: "center" },
+  { id: "info_updated_month", label: "情報更新月", sortable: true, type: "string", className: "col-updated", align: "center" },
   { id: "link", label: "詳細", sortable: false, className: "col-link", align: "center" },
 ];
 
@@ -1159,6 +1160,41 @@ function isActiveProperty(property) {
   return !isSoldProperty(property) && !isDelistedProperty(property);
 }
 
+/** 駅名のヶ/ケ・ツ/ッ表記ゆれを比較用に揃える */
+function normalizeStationKanaVariant(name) {
+  return String(name || "").replace(/ケ/g, "ヶ").replace(/ッ/g, "ツ");
+}
+
+/** 表示用に優先する駅名表記 */
+const PREFERRED_STATION_SPELLINGS = [
+  "阿佐ヶ谷",
+  "南阿佐ヶ谷",
+  "市ヶ谷",
+  "希望ヶ丘",
+  "鶴ヶ峰",
+  "幡ヶ谷",
+  "井土ヶ谷",
+  "向ヶ丘遊園",
+  "祖師ヶ谷大蔵",
+  "新百合ヶ丘",
+  "百合ヶ丘",
+  "梅ヶ丘",
+  "富士見ヶ丘",
+  "鐘ヶ淵",
+  "雑司ヶ谷",
+  "都電雑司ヶ谷",
+  "つつじヶ丘",
+  "西ヶ原四丁目",
+  "保土ケ谷",
+  "千駄ケ谷",
+  "西ケ原",
+  "霞ケ関",
+];
+
+const PREFERRED_STATION_BY_KEY = Object.fromEntries(
+  PREFERRED_STATION_SPELLINGS.map((name) => [normalizeStationKanaVariant(name), name])
+);
+
 /** 駅名を表示・検索用に正規化する */
 function canonicalizeStationName(name) {
   let text = String(name || "").trim();
@@ -1177,23 +1213,22 @@ function canonicalizeStationName(name) {
 
   let match = text.match(/^(.+?)\((東京|神奈川)\)$/);
   if (match) {
-    return match[1];
+    text = match[1];
+  } else {
+    match = text.match(/^(.+?)\((.+)\)$/);
+    if (match) {
+      const base = match[1];
+      const suffix = match[2];
+      if (/(メトロ|交通局|電鉄|モノレール|エクスプレス|その他)/.test(suffix)) {
+        text = base;
+      } else if (normalizeStationKanaVariant(base) === normalizeStationKanaVariant(suffix)) {
+        text = PREFERRED_STATION_BY_KEY[normalizeStationKanaVariant(base)]
+          || (base.includes("ヶ") || base.includes("ッ") ? base : suffix);
+      }
+    }
   }
 
-  match = text.match(/^(.+?)\((.+)\)$/);
-  if (match) {
-    const base = match[1];
-    const suffix = match[2];
-    if (/(メトロ|交通局|電鉄|モノレール|エクスプレス|その他)/.test(suffix)) {
-      return base;
-    }
-    const variant = (value) => value.replace(/ケ/g, "ヶ").replace(/ッ/g, "ツ");
-    if (variant(base) === variant(suffix)) {
-      return base.includes("ヶ") || base.includes("ッ") ? base : suffix;
-    }
-  }
-
-  return text;
+  return PREFERRED_STATION_BY_KEY[normalizeStationKanaVariant(text)] || text;
 }
 
 /** 駅名で物件が該当するか判定する（単一駅） */
@@ -1202,6 +1237,9 @@ function matchesStation(property, station) {
   const propertyStation = canonicalizeStationName(property.station);
   const targetStation = canonicalizeStationName(station);
   if (propertyStation === targetStation) return true;
+  if (normalizeStationKanaVariant(propertyStation) === normalizeStationKanaVariant(targetStation)) {
+    return true;
+  }
 
   const searchable = [
     property.property_name,
@@ -1433,6 +1471,17 @@ function getDisplayTransactionPeriod(property) {
   return "";
 }
 
+/** SUUMO 情報提供日から情報更新月を表示する */
+function getDisplayInfoUpdatedMonth(property) {
+  if (property.info_updated_month) {
+    return property.info_updated_month;
+  }
+  const raw = String(property.info_provided_date || "").trim();
+  const match = raw.match(/^(\d{4})-(\d{1,2})/);
+  if (!match) return "";
+  return `${Number(match[1])}年${Number(match[2])}月`;
+}
+
 /** 物件の方位を表示用に取得する */
 function getDisplayDirection(property) {
   if (property.direction) {
@@ -1636,6 +1685,8 @@ function getSortValue(property, column) {
       return property.direction || "";
     case "transaction_period":
       return getDisplayTransactionPeriod(property);
+    case "info_updated_month":
+      return property.info_provided_date || getDisplayInfoUpdatedMonth(property);
     case "age_years":
       return Number(property.age_years ?? Number.NaN);
     default:
@@ -2399,6 +2450,7 @@ function renderProperties() {
       <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
       <div ${getCellProps("age_years", "details")}">${property.age_years ?? "-"}年</div>
       <div ${getCellProps("transaction_period", "details")}">${getDisplayTransactionPeriod(property)}</div>
+      <div ${getCellProps("info_updated_month", "details")}">${getDisplayInfoUpdatedMonth(property) || "-"}</div>
       <div class="card-footer-row">
         <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
         <button type="button" class="card-expand-btn" aria-expanded="false">
