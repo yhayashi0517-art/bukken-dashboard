@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-08 12:30:55",
+  "updated_at": "2026-08-08 14:34:28",
   "total_count": 139203,
   "active_count": 56285,
   "sold_count": 82918,
@@ -190,7 +190,6 @@
     "南町田グランベリーパーク",
     "南砂町",
     "南部市場",
-    "南阿佐ケ谷",
     "南阿佐ヶ谷",
     "原宿",
     "参宮橋",
@@ -291,11 +290,9 @@
     "巣鴨新田",
     "左近山第５",
     "市が尾",
-    "市ケ谷",
     "市ヶ谷",
     "市場前",
     "市大医学部",
-    "希望ケ丘",
     "希望ヶ丘",
     "幡ヶ谷",
     "平井",
@@ -707,7 +704,6 @@
     "門前仲町",
     "関内",
     "阪東橋",
-    "阿佐ケ谷",
     "阿佐ヶ谷",
     "雑司が谷",
     "雑司ヶ谷",
@@ -747,7 +743,6 @@
     "鴨居",
     "鵜の木",
     "鶯谷",
-    "鶴ケ峰",
     "鶴ヶ峰",
     "鶴川",
     "鶴見",
@@ -762,7 +757,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 755,
+  "station_count": 750,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
@@ -1351,7 +1346,7 @@
         "avg_unit_price": 41.8,
         "count": 10
       },
-      "南阿佐ケ谷": {
+      "南阿佐ヶ谷": {
         "avg_unit_price": 98.5,
         "count": 132
       },
@@ -3039,7 +3034,7 @@
         "avg_unit_price": 73.3,
         "count": 621
       },
-      "阿佐ケ谷": {
+      "阿佐ヶ谷": {
         "avg_unit_price": 85.7,
         "count": 76
       },
@@ -3205,7 +3200,7 @@
       }
     }
   },
-  "chunk_count": 8,
+  "chunk_count": 9,
   "chunks": [
     "properties-001.json",
     "properties-002.json",
@@ -3214,6 +3209,7 @@
     "properties-005.json",
     "properties-006.json",
     "properties-007.json",
-    "properties-008.json"
+    "properties-008.json",
+    "properties-009.json"
   ]
 }
