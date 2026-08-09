@@ -170,7 +170,7 @@ const TABLE_COLUMNS = [
   { id: "direction", label: "方位", sortable: true, type: "string", className: "col-direction", align: "center" },
   { id: "age_years", label: "築年数", sortable: true, type: "number", className: "col-age", align: "end" },
   { id: "transaction_period", label: "取引時期", sortable: true, type: "string", className: "col-period", align: "center" },
-  { id: "info_updated_month", label: "情報更新月", sortable: true, type: "string", className: "col-updated", align: "center" },
+  { id: "info_updated_date", label: "情報更新日", sortable: true, type: "string", className: "col-updated", align: "center" },
   { id: "link", label: "詳細", sortable: false, className: "col-link", align: "center" },
 ];
 
@@ -1471,15 +1471,18 @@ function getDisplayTransactionPeriod(property) {
   return "";
 }
 
-/** SUUMO 情報提供日から情報更新月を表示する */
-function getDisplayInfoUpdatedMonth(property) {
-  if (property.info_updated_month) {
+/** SUUMO 情報提供日から情報更新日を表示する（YYYY年M月D日） */
+function getDisplayInfoUpdatedDate(property) {
+  if (property.info_updated_date) {
+    return property.info_updated_date;
+  }
+  if (property.info_updated_month && /年.*月.*日$/.test(property.info_updated_month)) {
     return property.info_updated_month;
   }
   const raw = String(property.info_provided_date || "").trim();
-  const match = raw.match(/^(\d{4})-(\d{1,2})/);
+  const match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (!match) return "";
-  return `${Number(match[1])}年${Number(match[2])}月`;
+  return `${Number(match[1])}年${Number(match[2])}月${Number(match[3])}日`;
 }
 
 /** 物件の方位を表示用に取得する */
@@ -1685,8 +1688,8 @@ function getSortValue(property, column) {
       return property.direction || "";
     case "transaction_period":
       return getDisplayTransactionPeriod(property);
-    case "info_updated_month":
-      return property.info_provided_date || getDisplayInfoUpdatedMonth(property);
+    case "info_updated_date":
+      return property.info_provided_date || getDisplayInfoUpdatedDate(property);
     case "age_years":
       return Number(property.age_years ?? Number.NaN);
     default:
@@ -2450,7 +2453,7 @@ function renderProperties() {
       <div ${getCellProps("direction", "details")}">${getDisplayDirection(property)}</div>
       <div ${getCellProps("age_years", "details")}">${property.age_years ?? "-"}年</div>
       <div ${getCellProps("transaction_period", "details")}">${getDisplayTransactionPeriod(property)}</div>
-      <div ${getCellProps("info_updated_month", "details")}">${getDisplayInfoUpdatedMonth(property) || "-"}</div>
+      <div ${getCellProps("info_updated_date", "details")}">${getDisplayInfoUpdatedDate(property) || "-"}</div>
       <div class="card-footer-row">
         <p class="card-summary" data-card-section="summary">${escapeHtml(cardSummary || "詳細情報あり")}</p>
         <button type="button" class="card-expand-btn" aria-expanded="false">
