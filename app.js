@@ -2315,19 +2315,45 @@ function isValidFloorPlanUrl(url) {
   return text.startsWith("http") && text !== "nan" && text !== "none";
 }
 
+/** SUUMO resizeImage は w/h が無いと 400 になるため付与する */
+function normalizeFloorPlanUrl(url) {
+  if (!isValidFloorPlanUrl(url)) return "";
+  let text = String(url).trim();
+  if (text.includes("resizeImage")) {
+    if (!/[?&]w=\d+/i.test(text)) {
+      text += `${text.includes("?") ? "&" : "?"}w=220`;
+    }
+    if (!/[?&]h=\d+/i.test(text)) {
+      text += "&h=165";
+    }
+  }
+  return text;
+}
+
+/** 間取り図の読み込み失敗時は「-」表示に切り替える */
+function handleFloorPlanError(img) {
+  if (!img || !img.parentNode) return;
+  const placeholder = document.createElement("span");
+  placeholder.className = "no-plan";
+  placeholder.textContent = "-";
+  img.replaceWith(placeholder);
+}
+
 /** 間取り図セル HTML */
 function renderFloorPlanCell(property) {
   const cellProps = getCellProps("plan");
-  if (!isValidFloorPlanUrl(property.floor_plan_url)) {
+  const src = normalizeFloorPlanUrl(property.floor_plan_url);
+  if (!src) {
     return `<div ${cellProps}><span class="no-plan">-</span></div>`;
   }
   return `
     <div ${cellProps}>
       <img
         class="floor-plan-thumb"
-        src="${property.floor_plan_url}"
-        alt="${property.property_name || "物件"}の間取り図"
+        src="${escapeHtml(src)}"
+        alt=""
         loading="lazy"
+        onerror="handleFloorPlanError(this)"
       >
     </div>
   `;
