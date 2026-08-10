@@ -209,6 +209,7 @@ const elements = {
   sharedSearchesStatus: document.getElementById("shared-searches-status"),
   savedSearchList: document.getElementById("saved-search-list"),
   archivedFavoritesPanel: document.getElementById("archived-favorites-panel"),
+  archivedFavoritesSummaryLabel: document.getElementById("archived-favorites-summary-label"),
   archivedFavoritesList: document.getElementById("archived-favorites-list"),
   paginationBottom: document.getElementById("pagination-bottom"),
 };
@@ -1000,10 +1001,17 @@ function renderArchivedFavorites() {
   if (archivedEntries.length === 0) {
     elements.archivedFavoritesPanel.hidden = true;
     elements.archivedFavoritesList.innerHTML = "";
+    if (elements.archivedFavoritesSummaryLabel) {
+      elements.archivedFavoritesSummaryLabel.textContent = "お気に入り（掲載終了）";
+    }
     return;
   }
 
   elements.archivedFavoritesPanel.hidden = false;
+  if (elements.archivedFavoritesSummaryLabel) {
+    elements.archivedFavoritesSummaryLabel.textContent =
+      `お気に入り（掲載終了）（${archivedEntries.length.toLocaleString()}件）`;
+  }
   elements.archivedFavoritesList.innerHTML = archivedEntries
     .map((entry) => {
       const property = resolveFavoriteProperty(entry);

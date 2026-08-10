@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <title>売出中・成約済み物件検索ダッシュボード</title>
   <base href="./">
-  <link rel="stylesheet" href="style.css?v=20260810b">
+  <link rel="stylesheet" href="style.css?v=20260810c">
 </head>
 <body>
   <header class="header">
@@ -153,17 +153,19 @@
       </main>
 
       <section id="archived-favorites-panel" class="archived-favorites-panel" hidden>
-        <div class="archived-favorites-header">
-          <h2>お気に入り（掲載終了）</h2>
+        <details class="archived-favorites-details">
+          <summary class="archived-favorites-summary">
+            <span id="archived-favorites-summary-label">お気に入り（掲載終了）</span>
+          </summary>
           <p class="archived-favorites-note">
             SUUMO の掲載が終了した物件、または成約済みになったお気に入り物件です。
           </p>
-        </div>
-        <div id="archived-favorites-list" class="archived-favorites-list"></div>
+          <div id="archived-favorites-list" class="archived-favorites-list"></div>
+        </details>
       </section>
     </div>
   </div>
 
-  <script src="app.js?v=20260810b"></script>
+  <script src="app.js?v=20260810c"></script>
 </body>
 </html>
