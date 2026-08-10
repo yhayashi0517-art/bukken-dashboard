@@ -2687,12 +2687,23 @@ function setupStationPicker() {
   });
 }
 
-/** 駅選択肢をマージして重複を除く */
+/** 建物名・バス停など、鉄道駅として不適切な名称か判定する */
+function looksLikeRailStationName(name) {
+  const text = canonicalizeStationName(name);
+  if (!text) return false;
+  if (/(ビル|プラザ|モール|タワー|ホテル|ケアプラザ|入口)/.test(text)) return false;
+  if (text.endsWith("センター") && text !== "センター北" && text !== "センター南") {
+    return false;
+  }
+  return true;
+}
+
+/** 駅選択肢をマージして重複を除く（非駅名は物件由来でも除外） */
 function mergeStationOptions(catalogStations, propertyStations) {
   const merged = new Set();
   [...(catalogStations || []), ...(propertyStations || [])].forEach((station) => {
     const normalized = canonicalizeStationName(station);
-    if (normalized) merged.add(normalized);
+    if (normalized && looksLikeRailStationName(normalized)) merged.add(normalized);
   });
   return [...merged].sort((left, right) => left.localeCompare(right, "ja"));
 }
