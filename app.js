@@ -756,8 +756,8 @@ function summarizeFilterState(state) {
   }
 
   if (state.status === "sold") parts.push("成約のみ");
-  else if (state.status === "bargain") parts.push("割安のみ");
-  else if (state.status === "all") parts.push("すべて");
+  else if (state.status === "bargain") parts.push("割安の売出中のみ");
+  else if (state.status === "all") parts.push("売出中＋成約");
   else parts.push("売出中");
 
   if (state.favoritesOnly) parts.push("お気に入り");
@@ -1468,6 +1468,7 @@ function matchesDirectionFilter(property) {
 }
 
 /** 表示対象フィルターに合うか判定する */
+/** 掲載終了は一覧に出さない。売出中（と成約）だけを対象にする。 */
 function matchesStatusFilter(property, statusFilter) {
   if (isDelistedProperty(property)) {
     return false;
@@ -1478,7 +1479,7 @@ function matchesStatusFilter(property, statusFilter) {
     case "sold":
       return isSoldProperty(property);
     case "bargain":
-      return isBargainProperty(property);
+      return isActiveProperty(property) && isBargainProperty(property);
     case "all":
     default:
       return isActiveProperty(property) || isSoldProperty(property);

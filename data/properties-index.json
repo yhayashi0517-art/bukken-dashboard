@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-08-09 21:18:31",
-  "total_count": 139216,
-  "active_count": 51035,
+  "updated_at": "2026-08-10 11:29:37",
+  "total_count": 142629,
+  "active_count": 51373,
   "sold_count": 82918,
-  "delisted_count": 5263,
-  "bargain_count": 2394,
+  "delisted_count": 8338,
+  "bargain_count": 2463,
   "stations": [
     "新宿",
     "あざみ野",
@@ -99,6 +99,7 @@
     "二俣川",
     "二子新地",
     "二子玉川",
+    "二本木",
     "二重橋前",
     "五反田",
     "五反野",
@@ -123,7 +124,6 @@
     "京王稲田堤",
     "人形町",
     "今井",
-    "今宿小学校入口",
     "仙川",
     "代々木",
     "代々木上原",
@@ -754,7 +754,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 750,
+  "station_count": 747,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
@@ -2442,6 +2442,10 @@
       "生麦": {
         "avg_unit_price": 44.1,
         "count": 167
+      },
+      "産業振興センター": {
+        "avg_unit_price": 30.0,
+        "count": 1
       },
       "用賀": {
         "avg_unit_price": 89.2,

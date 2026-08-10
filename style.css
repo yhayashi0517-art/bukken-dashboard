@@ -160,6 +160,13 @@ body {
   color: var(--text-tertiary);
 }
 
+.filter-status-help {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+
 .saved-search-help code {
   font-size: 0.7rem;
 }

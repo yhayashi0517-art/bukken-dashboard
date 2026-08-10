@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <title>売出中・成約済み物件検索ダッシュボード</title>
   <base href="./">
-  <link rel="stylesheet" href="style.css?v=20260810e">
+  <link rel="stylesheet" href="style.css?v=20260810f">
 </head>
 <body>
   <header class="header">
@@ -46,9 +46,10 @@
           <select id="filter-status" class="field-input">
             <option value="active">売り出し中のみ</option>
             <option value="sold">成約物件のみ</option>
-            <option value="bargain">割安物件のみ</option>
-            <option value="all">すべて</option>
+            <option value="bargain">割安の売出中のみ</option>
+            <option value="all">売出中＋成約</option>
           </select>
+          <p class="filter-status-help">掲載終了は一覧に出しません。お気に入りに残ったものだけ下部に表示します。</p>
         </div>
 
         <div class="sidebar-block filter-layout-group">
@@ -166,6 +167,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=20260810e"></script>
+  <script src="app.js?v=20260810f"></script>
 </body>
 </html>
