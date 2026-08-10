@@ -2245,6 +2245,7 @@ function getStationMarketInfo(station) {
 /** 相場サマリーを描画する（選択中の駅のみ） */
 function renderMarketSummary() {
   const stations = getSelectedStations();
+  const wasOpen = Boolean(elements.marketSummary.querySelector("details")?.open);
 
   if (stations.length === 0) {
     elements.marketSummary.innerHTML = `
@@ -2286,10 +2287,24 @@ function renderMarketSummary() {
     totalCount > 0 ? formatDecimal(weightedSum / totalCount, " 万円/㎡") : "-";
   const threshold = formatDecimal(getBargainThresholdPct(), "%");
 
+  let summaryLabel = "選択駅の相場";
+  if (stations.length === 1) {
+    const only = stations[0];
+    const info = getStationMarketInfo(only);
+    summaryLabel = info
+      ? `選択駅の相場（${only} · 平均 ${formatDecimal(info.avg_unit_price, " 万円/㎡")}）`
+      : `選択駅の相場（${only} · 成約データなし）`;
+  } else {
+    summaryLabel = `選択駅の相場（${stations.length}駅 · 加重平均 ${selectedAvg}）`;
+  }
+
   elements.marketSummary.innerHTML = `
     <h2>該当物件一覧</h2>
-    <div class="market-grid">${cards}</div>
-    <p class="muted">選択駅の加重平均 ${selectedAvg} / 割安判定: 相場比 ${threshold} 以上お得</p>
+    <details class="market-summary-details"${wasOpen ? " open" : ""}>
+      <summary class="market-summary-summary">${summaryLabel}</summary>
+      <div class="market-grid">${cards}</div>
+      <p class="muted market-summary-note">選択駅の加重平均 ${selectedAvg} / 割安判定: 相場比 ${threshold} 以上お得</p>
+    </details>
   `;
 }
 
