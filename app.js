@@ -414,14 +414,44 @@ function updateFavoritesCount() {
 function normalizeSavedSearches(items) {
   if (!Array.isArray(items)) return [];
   return items
-    .filter((item) => item && item.state)
+    .filter((item) => item && item.state && typeof item.state === "object")
     .map((item) => ({
       id: item.id || `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       name: item.name || "名称なし",
       createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: item.updatedAt || item.createdAt || new Date().toISOString(),
       lineNotify: Boolean(item.lineNotify ?? item.enabled),
       state: item.state,
     }));
+}
+
+/** 端末保存と共有保存を ID 単位で統合する（端末側を優先しつつ欠落を補完） */
+function mergeSavedSearches(localItems, remoteItems) {
+  const map = new Map();
+
+  const upsert = (item, preferLocal) => {
+    if (!item?.id) return;
+    const prev = map.get(item.id);
+    if (!prev) {
+      map.set(item.id, item);
+      return;
+    }
+    const prevTime = Date.parse(prev.updatedAt || prev.createdAt) || 0;
+    const nextTime = Date.parse(item.updatedAt || item.createdAt) || 0;
+    if (preferLocal || nextTime >= prevTime) {
+      map.set(item.id, item);
+    }
+  };
+
+  // 先に共有、後から端末（同 ID は端末を優先）
+  normalizeSavedSearches(remoteItems).forEach((item) => upsert(item, false));
+  normalizeSavedSearches(localItems).forEach((item) => upsert(item, true));
+
+  return [...map.values()].sort((a, b) => {
+    const aTime = Date.parse(a.updatedAt || a.createdAt) || 0;
+    const bTime = Date.parse(b.updatedAt || b.createdAt) || 0;
+    return bTime - aTime;
+  });
 }
 
 /** 共有JSON用のペイロードを作る */
@@ -432,6 +462,7 @@ function buildSharedSavedSearchesPayload() {
       id: item.id,
       name: item.name,
       createdAt: item.createdAt,
+      updatedAt: item.updatedAt || item.createdAt,
       lineNotify: Boolean(item.lineNotify),
       state: item.state,
     })),
@@ -644,17 +675,18 @@ function persistSavedSearches() {
   return writeStorageJson(SAVED_SEARCHES_STORAGE_KEY, savedSearches);
 }
 
-/** GitHub 上の共有JSONを読み込む */
+/** GitHub 上の共有JSONを読み込む（端末の保存を消さずマージする） */
 async function loadSharedSavedSearches() {
   sharedSearchesLoaded = false;
   sharedSearchesUpdatedAt = "";
+  const localItems = [...savedSearches];
   try {
     const response = await fetch(`${SHARED_SEARCHES_URL}?t=${Date.now()}`);
     if (response.status === 404) return false;
     if (!response.ok) return false;
     const data = await response.json();
-    const searches = normalizeSavedSearches(data.searches || []);
-    savedSearches = searches;
+    const remoteItems = normalizeSavedSearches(data.searches || []);
+    savedSearches = mergeSavedSearches(localItems, remoteItems);
     sharedSearchesUpdatedAt = data.updated_at || "";
     sharedSearchesLoaded = true;
     persistSavedSearches();
@@ -816,6 +848,7 @@ function toggleLineNotify(searchId) {
   const saved = savedSearches.find((item) => item.id === searchId);
   if (!saved) return;
   saved.lineNotify = !saved.lineNotify;
+  saved.updatedAt = new Date().toISOString();
   persistSavedSearches();
   sharedSearchesLoaded = false;
   renderSavedSearches();
@@ -833,10 +866,12 @@ function saveCurrentSearch() {
     return;
   }
 
+  const now = new Date().toISOString();
   savedSearches.unshift({
     id: `search-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
     lineNotify: Boolean(elements.saveLineNotify?.checked),
     state,
   });
@@ -855,7 +890,7 @@ function saveCurrentSearch() {
   }
   sharedSearchesLoaded = false;
   renderSavedSearches();
-  updateSharedSearchesStatus();
+  updateSharedSearchesStatus("この端末に保存しました（再読み込み後も残ります）");
 }
 
 /** 保存済み検索条件を適用する */
