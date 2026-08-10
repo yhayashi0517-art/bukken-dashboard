@@ -2316,16 +2316,24 @@ function isValidFloorPlanUrl(url) {
   return text.startsWith("http") && text !== "nan" && text !== "none";
 }
 
-/** SUUMO resizeImage は w/h が無いと 400 になるため付与する */
+/** SUUMO resizeImage は w/h が無いと 400 になるため付与する（スマホ表示向けにやや大きめ） */
 function normalizeFloorPlanUrl(url) {
   if (!isValidFloorPlanUrl(url)) return "";
   let text = String(url).trim();
   if (text.includes("resizeImage")) {
     if (!/[?&]w=\d+/i.test(text)) {
-      text += `${text.includes("?") ? "&" : "?"}w=220`;
+      text += `${text.includes("?") ? "&" : "?"}w=440`;
+    } else {
+      text = text.replace(/([?&]w=)(\d+)/i, (_, prefix, value) => (
+        `${prefix}${Math.max(Number(value), 440)}`
+      ));
     }
     if (!/[?&]h=\d+/i.test(text)) {
-      text += "&h=165";
+      text += "&h=330";
+    } else {
+      text = text.replace(/([?&]h=)(\d+)/i, (_, prefix, value) => (
+        `${prefix}${Math.max(Number(value), 330)}`
+      ));
     }
   }
   return text;
@@ -2344,8 +2352,18 @@ function handleFloorPlanError(img) {
 function renderFloorPlanCell(property) {
   const cellProps = getCellProps("plan");
   const src = normalizeFloorPlanUrl(property.floor_plan_url);
+  const captionParts = [
+    formatLayoutLabel(property.layout),
+    property.area_m2 != null && property.area_m2 !== ""
+      ? formatDecimal(property.area_m2, "㎡")
+      : "",
+  ].filter((part) => part && part !== "-");
+  const caption = captionParts.length
+    ? `<span class="floor-plan-caption">${escapeHtml(captionParts.join(" / "))}</span>`
+    : "";
+
   if (!src) {
-    return `<div ${cellProps}><span class="no-plan">-</span></div>`;
+    return `<div ${cellProps}><span class="no-plan">-</span>${caption}</div>`;
   }
   return `
     <div ${cellProps}>
@@ -2356,6 +2374,7 @@ function renderFloorPlanCell(property) {
         loading="lazy"
         onerror="handleFloorPlanError(this)"
       >
+      ${caption}
     </div>
   `;
 }
