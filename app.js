@@ -512,11 +512,12 @@ async function checkLocalSyncServer() {
 }
 
 /** ローカルサーバーへフォーム送信する（HTTPSのGitHub Pagesからでも動作） */
-function publishSharedSavedSearchesViaLocalForm(payload) {
+function publishSharedSavedSearchesViaLocalForm(payload, options = {}) {
+  const { silent = false } = options;
   const form = document.createElement("form");
   form.method = "POST";
   form.action = LOCAL_SYNC_FORM_URL;
-  form.target = "_blank";
+  form.target = silent ? "saved-searches-sync-frame" : "_blank";
   form.rel = "noopener";
 
   const input = document.createElement("input");
@@ -529,8 +530,38 @@ function publishSharedSavedSearchesViaLocalForm(payload) {
   form.submit();
   form.remove();
   return {
-    message: "PC保存サーバーへ送信しました。開いたページで結果を確認してください。",
+    message: silent
+      ? "PC保存サーバーへ自動同期しました。"
+      : "PC保存サーバーへ送信しました。開いたページで結果を確認してください。",
   };
+}
+
+/** 保存済み条件を PC 側へ自動同期する（サーバー起動時） */
+function ensureSavedSearchesSyncFrame() {
+  let frame = document.getElementById("saved-searches-sync-frame");
+  if (!frame) {
+    frame = document.createElement("iframe");
+    frame.id = "saved-searches-sync-frame";
+    frame.name = "saved-searches-sync-frame";
+    frame.hidden = true;
+    frame.style.display = "none";
+    document.body.appendChild(frame);
+  }
+  return frame;
+}
+
+async function syncSavedSearchesToPcIfAvailable() {
+  await checkLocalSyncServer();
+  if (!localSyncAvailable || savedSearches.length === 0) {
+    return false;
+  }
+  ensureSavedSearchesSyncFrame();
+  const payload = buildSharedSavedSearchesPayload();
+  publishSharedSavedSearchesViaLocalForm(payload, { silent: true });
+  sharedSearchesUpdatedAt = payload.updated_at;
+  sharedSearchesLoaded = true;
+  updateSharedSearchesStatus("PCへ自動同期しました");
+  return true;
 }
 
 /** 検索条件を GitHub に保存して両端末で共有する */
@@ -845,7 +876,7 @@ function renderSavedSearches() {
 }
 
 /** LINE 通知対象の切り替え */
-function toggleLineNotify(searchId) {
+async function toggleLineNotify(searchId) {
   const saved = savedSearches.find((item) => item.id === searchId);
   if (!saved) return;
   saved.lineNotify = !saved.lineNotify;
@@ -854,10 +885,11 @@ function toggleLineNotify(searchId) {
   sharedSearchesLoaded = false;
   renderSavedSearches();
   updateSharedSearchesStatus();
+  await syncSavedSearchesToPcIfAvailable();
 }
 
 /** 現在の検索条件を保存する */
-function saveCurrentSearch() {
+async function saveCurrentSearch() {
   const state = captureFilterState();
   const inputName = elements.savedSearchName?.value.trim() || "";
   const name = inputName || buildDefaultSearchName(state);
@@ -892,6 +924,7 @@ function saveCurrentSearch() {
   sharedSearchesLoaded = false;
   renderSavedSearches();
   updateSharedSearchesStatus("この端末に保存しました（再読み込み後も残ります）");
+  await syncSavedSearchesToPcIfAvailable();
 }
 
 /** 保存済み検索条件を適用する */
@@ -902,7 +935,7 @@ function applySavedSearch(searchId) {
 }
 
 /** 保存済み検索条件を削除する */
-function deleteSavedSearch(searchId) {
+async function deleteSavedSearch(searchId) {
   const index = savedSearches.findIndex((item) => item.id === searchId);
   if (index === -1) return;
   savedSearches.splice(index, 1);
@@ -910,6 +943,7 @@ function deleteSavedSearch(searchId) {
   sharedSearchesLoaded = false;
   renderSavedSearches();
   updateSharedSearchesStatus();
+  await syncSavedSearchesToPcIfAvailable();
 }
 
 /** フィルター状態を復元する */
@@ -2853,6 +2887,7 @@ async function loadData() {
   loadSavedSearches();
   await loadSharedSavedSearches();
   await checkLocalSyncServer();
+  await syncSavedSearchesToPcIfAvailable();
   syncGitHubTokenInput();
 
   elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
