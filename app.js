@@ -26,6 +26,32 @@ const LOCAL_SYNC_URL = "http://127.0.0.1:8765/save-searches";
 const LOCAL_SYNC_FORM_URL = "http://127.0.0.1:8765/save-searches-form";
 const LOCAL_SYNC_HEALTH_URL = "http://127.0.0.1:8765/health";
 
+/** UTC を含む日時を日本標準時（YYYY-MM-DD HH:MM:SS）に変換する */
+function formatJapanDateTime(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const hasZone = /Z$|[+-]\d{2}:\d{2}$/.test(text.replace(/\.\d+(Z)?$/, "$1"));
+  if (!hasZone) {
+    return text.replace("T", " ").replace(/\.\d+$/, "");
+  }
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) {
+    return text.replace("T", " ").replace(/\.\d+Z?$/, "");
+  }
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(parsed);
+  const get = (type) => parts.find((part) => part.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
 let allProperties = [];
 /** 物件ID → 物件データ */
 const propertyById = new Map();
@@ -477,7 +503,7 @@ function updateSharedSearchesStatus(extraMessage = "") {
   const tokenReady = Boolean(sync.token);
   let text = "";
   if (sharedSearchesLoaded && sharedSearchesUpdatedAt) {
-    const label = String(sharedSearchesUpdatedAt).replace("T", " ").replace(/\.\d+Z?$/, "");
+    const label = formatJapanDateTime(sharedSearchesUpdatedAt);
     text = `共有条件を読み込みました（更新: ${label} / ${savedSearches.length}件）`;
   } else if (sharedSearchesLoaded) {
     text = `共有条件を読み込みました（${savedSearches.length}件）`;
@@ -2890,7 +2916,7 @@ async function loadData() {
   await syncSavedSearchesToPcIfAvailable();
   syncGitHubTokenInput();
 
-  elements.updatedAt.textContent = `最終更新: ${data.updated_at}`;
+  elements.updatedAt.textContent = `最終更新: ${formatJapanDateTime(data.updated_at)}`;
 
   const defaultThreshold = Number(marketSummary.bargain_threshold_pct ?? 10);
   if (!Number.isNaN(defaultThreshold)) {
