@@ -1,10 +1,142 @@
 {
-  "updated_at": "2026-07-23T01:55:40.670Z",
+  "updated_at": "2026-08-19T11:31:58.002Z",
   "searches": [
+    {
+      "id": "search-1786347316331-7feisn",
+      "name": "経堂・豪徳寺ほか3駅 / 売出中 / 2階以上 / 間取り 14件 / 南...",
+      "createdAt": "2026-08-10T07:35:16.331Z",
+      "updatedAt": "2026-08-10T07:35:16.331Z",
+      "lineNotify": true,
+      "state": {
+        "search": "",
+        "status": "active",
+        "stations": [
+          "経堂",
+          "豪徳寺",
+          "祖師ヶ谷大蔵"
+        ],
+        "layouts": [
+          "2K",
+          "2DDKK",
+          "2DK",
+          "2LLDDKK",
+          "2LK",
+          "2LDK",
+          "2LD",
+          "23LDK",
+          "3K",
+          "3DK",
+          "3LK",
+          "3LKK",
+          "3LDK",
+          "3S"
+        ],
+        "directions": [
+          "南",
+          "南東",
+          "南西"
+        ],
+        "floorMin2": true,
+        "favoritesOnly": false,
+        "ranges": {
+          "price": {
+            "min": 0,
+            "max": 30000
+          },
+          "area": {
+            "min": 58,
+            "max": 120
+          },
+          "age": {
+            "min": 0,
+            "max": 29
+          },
+          "walk": {
+            "min": 0,
+            "max": 20
+          },
+          "bargain": {
+            "min": 10,
+            "max": 30
+          }
+        },
+        "sort": {
+          "column": "price_jpy",
+          "direction": "asc"
+        }
+      }
+    },
+    {
+      "id": "search-1786324717458-de1mp3",
+      "name": "吉祥寺・三鷹ほか5駅 / 売出中 / 2階以上 / 間取り 13件 / 南...",
+      "createdAt": "2026-08-10T01:18:37.458Z",
+      "updatedAt": "2026-08-10T01:18:37.458Z",
+      "lineNotify": true,
+      "state": {
+        "search": "",
+        "status": "active",
+        "stations": [
+          "吉祥寺",
+          "三鷹",
+          "荻窪",
+          "中野",
+          "西荻窪"
+        ],
+        "layouts": [
+          "2K",
+          "2DDKK",
+          "2DK",
+          "2LK",
+          "2LDK",
+          "2LD",
+          "23LDK",
+          "3K",
+          "3DK",
+          "3LK",
+          "3LKK",
+          "3LDK",
+          "3S"
+        ],
+        "directions": [
+          "南",
+          "南東",
+          "南西"
+        ],
+        "floorMin2": true,
+        "favoritesOnly": false,
+        "ranges": {
+          "price": {
+            "min": 0,
+            "max": 30000
+          },
+          "area": {
+            "min": 51,
+            "max": 120
+          },
+          "age": {
+            "min": 0,
+            "max": 30
+          },
+          "walk": {
+            "min": 0,
+            "max": 19
+          },
+          "bargain": {
+            "min": 10,
+            "max": 30
+          }
+        },
+        "sort": {
+          "column": "price_jpy",
+          "direction": "asc"
+        }
+      }
+    },
     {
       "id": "kyodo-2ldk-test",
       "name": "経堂・2LDK・南向き（テスト）",
       "createdAt": "2026-07-23T10:40:00.000Z",
+      "updatedAt": "2026-07-23T10:40:00.000Z",
       "lineNotify": true,
       "state": {
         "search": "",
