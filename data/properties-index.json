@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-08-22 05:17:50",
-  "total_count": 149183,
-  "active_count": 42055,
+  "updated_at": "2026-08-23 05:46:40",
+  "total_count": 150176,
+  "active_count": 43031,
   "sold_count": 82918,
-  "delisted_count": 24210,
-  "bargain_count": 1794,
+  "delisted_count": 24227,
+  "bargain_count": 1852,
   "stations": [
     "新宿",
     "あざみ野",
@@ -221,6 +221,7 @@
     "多摩川",
     "大久保",
     "大井町",
+    "大井競馬場",
     "大井競馬場前",
     "大倉山",
     "大口",
@@ -754,7 +755,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 747,
+  "station_count": 748,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
