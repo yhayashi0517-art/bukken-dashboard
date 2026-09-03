@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-08-24 05:33:56",
-  "total_count": 150955,
-  "active_count": 43800,
+  "updated_at": "2026-09-03 12:11:25",
+  "total_count": 151595,
+  "active_count": 44432,
   "sold_count": 82918,
-  "delisted_count": 24237,
-  "bargain_count": 1874,
+  "delisted_count": 24245,
+  "bargain_count": 1881,
   "stations": [
     "新宿",
     "あざみ野",
@@ -381,6 +381,7 @@
     "春日",
     "昭和",
     "昭和島",
+    "晴海５丁目ターミナル",
     "曙橋",
     "曳舟",
     "月島",
@@ -755,7 +756,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 748,
+  "station_count": 749,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
