@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-09-03 12:11:25",
-  "total_count": 151595,
-  "active_count": 44432,
+  "updated_at": "2026-09-03 18:42:52",
+  "total_count": 157364,
+  "active_count": 50091,
   "sold_count": 82918,
-  "delisted_count": 24245,
-  "bargain_count": 1881,
+  "delisted_count": 24355,
+  "bargain_count": 2147,
   "stations": [
     "新宿",
     "あざみ野",
@@ -27,6 +27,7 @@
     "センター北",
     "センター南",
     "テレコムセンター",
+    "バス停　三ツ池公園",
     "一之江",
     "三ツ境",
     "三ツ沢上町",
@@ -756,7 +757,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 749,
+  "station_count": 750,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
@@ -3199,7 +3200,7 @@
       }
     }
   },
-  "chunk_count": 9,
+  "chunk_count": 10,
   "chunks": [
     "properties-001.json",
     "properties-002.json",
@@ -3209,6 +3210,7 @@
     "properties-006.json",
     "properties-007.json",
     "properties-008.json",
-    "properties-009.json"
+    "properties-009.json",
+    "properties-010.json"
   ]
 }
