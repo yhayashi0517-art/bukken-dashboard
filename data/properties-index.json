@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-09-08 11:05:11",
-  "total_count": 161437,
-  "active_count": 54001,
+  "updated_at": "2026-09-13 07:33:28",
+  "total_count": 165644,
+  "active_count": 58138,
   "sold_count": 82918,
-  "delisted_count": 24518,
-  "bargain_count": 2330,
+  "delisted_count": 24588,
+  "bargain_count": 2488,
   "stations": [
     "新宿",
     "あざみ野",
@@ -467,6 +467,7 @@
     "武蔵溝ノ口",
     "武蔵白石",
     "武蔵関",
+    "水元五丁目",
     "水天宮前",
     "水道橋",
     "氷川台",
@@ -757,7 +758,7 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 750,
+  "station_count": 751,
   "market_summary": {
     "global_avg_unit_price": 80.4,
     "bargain_threshold_pct": 10.0,
