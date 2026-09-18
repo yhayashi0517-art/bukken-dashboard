@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-09-16 05:57:18",
-  "total_count": 168379,
-  "active_count": 60755,
+  "updated_at": "2026-09-19 02:07:30",
+  "total_count": 169963,
+  "active_count": 62279,
   "sold_count": 82918,
-  "delisted_count": 24706,
-  "bargain_count": 2569,
+  "delisted_count": 24766,
+  "bargain_count": 2625,
   "stations": [
     "新宿",
     "あざみ野",
@@ -3201,7 +3201,7 @@
       }
     }
   },
-  "chunk_count": 10,
+  "chunk_count": 11,
   "chunks": [
     "properties-001.json",
     "properties-002.json",
@@ -3212,6 +3212,7 @@
     "properties-007.json",
     "properties-008.json",
     "properties-009.json",
-    "properties-010.json"
+    "properties-010.json",
+    "properties-011.json"
   ]
 }
