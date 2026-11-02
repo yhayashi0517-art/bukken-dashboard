@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-10-22 04:57:53",
-  "total_count": 51915,
-  "active_count": 51915,
+  "updated_at": "2026-11-02 12:23:14",
+  "total_count": 60236,
+  "active_count": 60236,
   "sold_count": 0,
   "delisted_count": 0,
   "bargain_count": 0,
@@ -47,6 +47,7 @@
     "46",
     "5",
     "6",
+    "66",
     "7",
     "8",
     "9",
@@ -732,16 +733,17 @@
     "黄金町",
     "黒川"
   ],
-  "station_count": 725,
+  "station_count": 726,
   "market_summary": {
     "global_avg_unit_price": null,
     "bargain_threshold_pct": 10.0,
     "stations": {}
   },
-  "chunk_count": 3,
+  "chunk_count": 4,
   "chunks": [
     "properties-001.json",
     "properties-002.json",
-    "properties-003.json"
+    "properties-003.json",
+    "properties-004.json"
   ]
 }
